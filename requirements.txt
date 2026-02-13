@@ -1,0 +1,32 @@
+# Etsy Browser Bulk Uploader - Dependencies
+# Python 3.10+ required
+
+# Selenium WebDriver
+selenium==4.15.2
+
+# WebDriver Manager for automatic driver installation
+webdriver-manager==4.0.1
+
+# Data handling
+pandas==2.1.4
+
+# Image processing
+pillow==10.1.0
+
+# Fake user agents for stealth
+fake-useragent==1.4.0
+
+# CSV handling
+python-csv==0.0.2
+
+# JSON handling (built-in, listed for reference)
+# json (built-in)
+
+# Cryptography for config encryption
+cryptography==41.0.7
+
+# Logging
+colorlog==6.8.0
+
+# HTTP requests (for additional features)
+requests==2.31.0
