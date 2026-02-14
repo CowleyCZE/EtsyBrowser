@@ -1,0 +1,1 @@
+# Etsy Browser Bulk Uploader

@@ -1,0 +1,17 @@
+# Etsy Browser Bulk Uploader - Python Dependencies
+
+# Core
+selenium==4.15.2
+webdriver-manager==4.0.1
+
+# Data processing
+pandas==2.1.4
+
+# Image handling
+pillow==10.1.0
+
+# Browser stealth
+selenium-stealth==1.0.6
+
+# Utilities
+python-dotenv==1.0.0

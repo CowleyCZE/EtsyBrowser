@@ -1,96 +1,135 @@
-# Next.js Starter Template
+# Etsy Browser Bulk Uploader for StorkVisionArt
 
-A minimal Next.js starter template designed for AI-assisted development. It provides a clean foundation that can be extended to build any type of web application.
+A Selenium-based automation tool for bulk uploading digital products to Etsy without using the official API.
 
 ## Features
 
-- **Next.js 16** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS 4** for styling
-- **ESLint** for code quality
-- **Recipe system** for common additions (database, auth)
-- **Memory bank** for AI context persistence
+- **Quick Edit Mode**: Auto-fill Etsy listing form from CSV data
+- **Bulk Editor Mode**: Download Etsy CSV template, fill with data, upload back
+- **Image Upload**: Drag&drop or file selector for up to 10 images per product
+- **Smart Filling**: Category dropdown, auto-generated tags, price validation
+- **Human-like Automation**: Random delays, scrolling, mouse movements to avoid bot detection
 
-## Quick Start
+## Supported Etsy Fields
 
-```bash
-# Install dependencies
-bun install
+### Required
+- title
+- description (HTML)
+- price
+- quantity (999 for digital)
+- images (up to 10)
 
-# Start development server
-bun dev
-```
+### Categories
+- Art&Collectibles > Prints > Digital Prints/WallArt
 
-Open [http://localhost:3000](http://localhost:3000) to view your app.
+### Listing Status
+- State: Active
+- Who made: AI_GENERATED
+- Is digital: YES
 
-## Adding Features
+### Tags
+- 13 auto-generated tags (e.g., "digital art, AI print, wall decor, modern art...")
 
-### Add a new page
+### Shipping
+- Digital download (no shipping required)
 
-Create a file at `src/app/[route]/page.tsx`:
-```tsx
-export default function NewPage() {
-  return <div>New page content</div>;
-}
-```
+## Tech Stack
 
-### Add components
-
-Create `src/components/` directory and add components:
-```tsx
-// src/components/ui/Button.tsx
-export function Button({ children }: { children: React.ReactNode }) {
-  return <button className="px-4 py-2 bg-blue-600 text-white rounded">{children}</button>;
-}
-```
-
-### Add a database
-
-Follow `.kilocode/recipes/add-database.md`
-
-### Add API routes
-
-Create `src/app/api/[route]/route.ts`:
-```tsx
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  return NextResponse.json({ message: "Hello" });
-}
-```
-
-## Available Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `bun install` | Install dependencies |
-| `bun dev` | Start development server |
-| `bun build` | Build production app |
-| `bun start` | Start production server |
-| `bun lint` | Check code quality |
-| `bun typecheck` | Type checking |
+- Python 3.10+
+- Selenium 4.15.2
+- WebDriver Manager 4.0.1
+- Pandas 2.1.4
+- Pillow 10.1.0
 
 ## Project Structure
 
 ```
-/
-├── .gitignore
-├── package.json
-├── next.config.ts
-├── tsconfig.json
-├── postcss.config.mjs
-├── eslint.config.mjs
-├── public/
-│   └── .gitkeep
-└── src/
-    └── app/
-        ├── layout.tsx      # Root layout
-        ├── page.tsx       # Home page
-        └── globals.css    # Global styles
+├── config.json          # Etsy credentials and settings
+├── products.csv         # Source product data
+├── requirements.txt     # Python dependencies
+├── src/
+│   ├── __init__.py
+│   ├── browser_utils.py # Selenium browser setup and helpers
+│   ├── fill_csv.py      # CSV filling utility
+│   ├── logger.py        # Logging configuration
+│   └── uploader.py      # Main uploader script
+├── images/              # Product images directory
+└── logs/                # Screenshots and error logs
 ```
 
-## Documentation
+## CSV Structure (products.csv)
 
-- [Next.js Docs](https://nextjs.org/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [TypeScript](https://www.typescriptlang.org/docs)
+```csv
+title,description,price,tags,category_path,image_paths,shop_section
+"Neon Cityscape Print","<b>AI-generated neon city digital print</b>. Instant download.",12.99,"digital art,neon,cityscape,modern,wall art,printable","Art&Collectibles:Prints:DigitalPrints","./images/neon01.jpg;./images/neon02.jpg","AI Digital Prints"
+```
+
+## Workflow
+
+1. **START** → Login to etsy.com/your/shops/StorkVisionArt/manage
+2. **MODE1 (Single)**: Add listing → fill form → upload images → Publish
+3. **MODE2 (Bulk)**: Tools → Bulk Edit CSV → download template → fill → upload
+4. **VALIDATION**: Check success → save listing_id → next product
+5. **ERROR HANDLING**: Screenshot + retry 3x → skip → log
+6. **FINISH**: Report (X/100 successful, time elapsed)
+
+## Installation
+
+```bash
+git clone <repo>
+pip install -r requirements.txt
+cp config.example.json config.json  # Add email/password
+python fill_csv.py  # Fill Etsy template from your CSV
+python uploader.py --mode bulk --headless
+```
+
+## Configuration
+
+Edit `config.json` with your Etsy credentials:
+
+```json
+{
+  "etsy_url": "https://www.etsy.com/your/shops/StorkVisionArt/manage",
+  "email": "your@email.com",
+  "password": "your_password",
+  "headless": false,
+  "delay_min": 2,
+  "delay_max": 10,
+  "max_products_per_hour": 50
+}
+```
+
+## Usage
+
+### Single Product Mode
+```bash
+python uploader.py --mode single --product-id 1
+```
+
+### Bulk Mode
+```bash
+python uploader.py --mode bulk --headless
+```
+
+### With custom CSV
+```bash
+python uploader.py --csv custom_products.csv
+```
+
+## Advantages vs API
+
+- ✅ No API approval required (works immediately)
+- ✅ Supports variations, personalization, sale prices
+- ✅ Etsy updates apply automatically
+- ✅ Preview before publish
+
+## Limitations & Solutions
+
+### Bot Detection
+- **Solution**: selenium-stealth, random user-agents, human delays
+
+### Rate Limits (~10/min)
+- **Solution**: 30s pause between products, max 50/hour
+
+### Captcha
+- **Solution**: 2FA backup login, manual intervention flag
