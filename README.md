@@ -1,37 +1,37 @@
-# Etsy Browser Bulk Uploader for StorkVisionArt
+# Nástroj pro hromadné nahrávání do prohlížeče Etsy pro StorkVisionArt
 
-A Selenium-based automation tool for bulk uploading digital products to Etsy without using the official API.
+Automatizační nástroj založený na technologii Selenium pro hromadné nahrávání digitálních produktů na Etsy bez použití oficiálního API.
 
-## Features
+## Funkce
 
-- **Quick Edit Mode**: Auto-fill Etsy listing form from CSV data
-- **Bulk Editor Mode**: Download Etsy CSV template, fill with data, upload back
-- **Image Upload**: Drag&drop or file selector for up to 10 images per product
-- **Smart Filling**: Category dropdown, auto-generated tags, price validation
-- **Human-like Automation**: Random delays, scrolling, mouse movements to avoid bot detection
+- **Režim rychlé úpravy**: Automatické vyplňování formuláře Etsy z dat CSV
+- **Režim hromadné úpravy**: Stáhněte si šablonu Etsy CSV, naplňte daty, nahrajte zpět
+- **Nahrávání obrázků**: Přetáhněte a vložte nebo vyberte soubor až pro 10 obrázků na produkt
+- **Inteligentní vyplňování**: Rozbalovací nabídka kategorií, automaticky generované štítky, ověření ceny
+- **Automatizace podobná lidskému modelu**: Náhodné zpoždění, posouvání, pohyby myši, aby se zabránilo detekci botů
 
-## Supported Etsy Fields
+## Podporovaná pole Etsy
 
-### Required
-- title
-- description (HTML)
-- price
-- quantity (999 for digital)
-- images (up to 10)
+### Povinné
+- název
+- popis (HTML)
+- cena
+- množství (999 pro digitální)
+- obrázky (až 10)
 
-### Categories
-- Art&Collectibles > Prints > Digital Prints/WallArt
+### Kategorie
+- Umění a sběratelské předměty > Tisky > Digitální tisky/Nástěnné umění
 
-### Listing Status
-- State: Active
-- Who made: AI_GENERATED
-- Is digital: YES
+### Stav nabídky
+- Stav: Aktivní
+- Kdo vytvořil: AI_GENERATED
+- Je digitální: ANO
 
-### Tags
-- 13 auto-generated tags (e.g., "digital art, AI print, wall decor, modern art...")
+### Štítky
+- 13 automaticky generovaných štítků (např. „digitální umění, tisk AI, nástěnná dekorace, moderní umění...“)
 
-### Shipping
-- Digital download (no shipping required)
+### Doprava
+- Digitální stažení (ne (doprava (vyžadováno)
 
 ## Tech Stack
 
@@ -41,95 +41,95 @@ A Selenium-based automation tool for bulk uploading digital products to Etsy wit
 - Pandas 2.1.4
 - Pillow 10.1.0
 
-## Project Structure
+## Struktura projektu
 
 ```
-├── config.json          # Etsy credentials and settings
-├── products.csv         # Source product data
-├── requirements.txt     # Python dependencies
+├── config.json # Přihlášení a nastavení Etsy
+├── products.csv # Zdrojová data produktu
+├── requirements.txt # Závislosti Pythonu
 ├── src/
-│   ├── __init__.py
-│   ├── browser_utils.py # Selenium browser setup and helpers
-│   ├── fill_csv.py      # CSV filling utility
-│   ├── logger.py        # Logging configuration
-│   └── uploader.py      # Main uploader script
-├── images/              # Product images directory
-└── logs/                # Screenshots and error logs
+│ ├── __init__.py
+│ ├── browser_utils.py # Nastavení a pomocníci prohlížeče Selenium
+│ ├── fill_csv.py # Výplň CSV
+│ ├── logger.py # Konfigurace protokolování
+│ └── uploader.py # Hlavní skript pro nahrávání
+├── images/ # Adresář obrázků produktu
+└── logs/ # Snímky obrazovky a protokoly chyb
 ```
 
-## CSV Structure (products.csv)
+## Struktura CSV (products.csv)
 
 ```csv
-title,description,price,tags,category_path,image_paths,shop_section
-"Neon Cityscape Print","<b>AI-generated neon city digital print</b>. Instant download.",12.99,"digital art,neon,cityscape,modern,wall art,printable","Art&Collectibles:Prints:DigitalPrints","./images/neon01.jpg;./images/neon02.jpg","AI Digital Prints"
+title, description, price, tags, category_path, image_paths, shop_section
+"Neonový tisk městské krajiny","<b>Digitální tisk městské krajiny vygenerovaný umělou inteligencí</b>. Okamžité stažení.",12.99,"digital art,neon,cityscape,modern,wall art,printable","Art&Collectibles:Prints:DigitalPrints","./images/neon01.jpg;./images/neon02.jpg","Digitální tisky vygenerované umělou inteligencí"
 ```
 
-## Workflow
+## Pracovní postup
 
-1. **START** → Login to etsy.com/your/shops/StorkVisionArt/manage
-2. **MODE1 (Single)**: Add listing → fill form → upload images → Publish
-3. **MODE2 (Bulk)**: Tools → Bulk Edit CSV → download template → fill → upload
-4. **VALIDATION**: Check success → save listing_id → next product
-5. **ERROR HANDLING**: Screenshot + retry 3x → skip → log
-6. **FINISH**: Report (X/100 successful, time elapsed)
+1. **START** → Přihlaste se na etsy.com/your/shops/StorkVisionArt/manage
+2. **MODE1 (Jednotlivě)**: Přidat inzerát → Vyplnit formulář → Nahrát obrázky → Publikovat
+3. **REŽIM2 (Hromadně)**: Nástroje → Hromadná úprava CSV → Stáhnout šablonu → Vyplnit → nahrát
+4. **OVĚŘENÍ**: Kontrola úspěchu → uložit listing_id → další produkt
+5. **ŘEŠENÍ CHYB**: Snímek obrazovky + opakovat 3x → přeskočit → protokolovat
+6. **HOTOVO**: Zpráva (X/100 úspěšné, uplynulý čas)
 
-## Installation
+## Instalace
 
 ```bash
 git clone <repo>
 pip install -r requirements.txt
-cp config.example.json config.json  # Add email/password
-python fill_csv.py  # Fill Etsy template from your CSV
+cp config.example.json config.json # Přidat e-mail/heslo
+python fill_csv.py # Vyplnit šablonu Etsy z vašeho CSV
 python uploader.py --mode bulk --headless
 ```
 
-## Configuration
+## Konfigurace
 
-Edit `config.json` with your Etsy credentials:
+Upravte `config.json` pomocí svých přihlašovacích údajů Etsy:
 
 ```json
 {
-  "etsy_url": "https://www.etsy.com/your/shops/StorkVisionArt/manage",
-  "email": "your@email.com",
-  "password": "your_password",
-  "headless": false,
-  "delay_min": 2,
-  "delay_max": 10,
-  "max_products_per_hour": 50
+"etsy_url": "https://www.etsy.com/your/shops/StorkVisionArt/manage",
+"email": "your@email.com",
+"password": "your_password",
+"headless": false,
+"delay_min": 2,
+"delay_max": 10,
+"max_products_per_hour": 50
 }
 ```
 
-## Usage
+## Použití
 
-### Single Product Mode
+### Režim jednoho produktu
 ```bash
 python uploader.py --mode single --product-id 1
 ```
 
-### Bulk Mode
+### Hromadný režim
 ```bash
 python uploader.py --mode bulk --headless
 ```
 
-### With custom CSV
+### S vlastním CSV
 ```bash
 python uploader.py --csv custom_products.csv
 ```
 
-## Advantages vs API
+## Výhody oproti API
 
-- ✅ No API approval required (works immediately)
-- ✅ Supports variations, personalization, sale prices
-- ✅ Etsy updates apply automatically
-- ✅ Preview before publish
+- ✅ Není vyžadováno schválení API (funguje ihned po instalaci)
+- ✅ Podporuje varianty, personalizaci, slevy
+- ✅ Aktualizace Etsy se aplikují automaticky
+- ✅ Náhled před publikováním
 
-## Limitations & Solutions
+## Omezení a alternativní řešení
 
-### Bot Detection
-- **Solution**: selenium-stealth, random user-agents, human delays
+### Detekce botů
+- **Řešení**: selenium-stealth, náhodní uživatelští agenti, lidské zpoždění
 
-### Rate Limits (~10/min)
-- **Solution**: 30s pause between products, max 50/hour
+### Limity rychlosti (~10/min)
+- **Řešení**: 30s pauza mezi produkty, max. 50/hod
 
 ### Captcha
-- **Solution**: 2FA backup login, manual intervention flag
+- **Řešení**: Záložní přihlášení 2FA, příznak ručního zásahu
