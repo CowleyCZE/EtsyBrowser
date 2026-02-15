@@ -3,6 +3,8 @@
 
 A Selenium-based automation tool for bulk uploading digital products 
 to Etsy without using the official API.
+
+Supports dynamic selectors loaded from src/selectors.json
 """
 
 import argparse
@@ -11,6 +13,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 
@@ -22,6 +25,7 @@ from src.browser_utils import (
     wait_for_element,
     safe_click,
     upload_file,
+    find_element_by_any_selector,
 )
 from src.logger import setup_logger, log_error_screenshot
 from src.fill_csv import read_products_csv, generate_etsy_csv
@@ -29,40 +33,131 @@ from src.fill_csv import read_products_csv, generate_etsy_csv
 logger = setup_logger("uploader")
 
 
+# Výchozí selektory - použijí se pokud selectors.json neexistuje
+DEFAULT_SELECTORS = {
+    "login_email": 'input[type="email"]',
+    "login_password": 'input[type="password"]',
+    "login_button": 'button[type="submit"]',
+    "add_listing": 'a[href*="/listings/new"]',
+    "title_input": 'input[name="title"]',
+    "description_editor": 'div[data-input="description"]',
+    "price_input": 'input[name="price"]',
+    "quantity_input": 'input[name="quantity"]',
+    "category_button": 'button[data-category]',
+    "digital_checkbox": 'input[name="is_digital"]',
+    "image_upload": 'input[type="file"][accept*="image"]',
+    "image_dropzone": 'div[data-upload-area]',
+    "tags_input": 'input[data-tag-input]',
+    "publish_button": 'button:contains("Publish")',
+    "save_draft_button": 'button:contains("Save as draft")',
+}
+
+
+def load_selectors(selectors_file: str = "src/selectors.json") -> dict:
+    """Načte selektory z JSON souboru.
+    
+    Args:
+        selectors_file: Cesta k selectors.json
+        
+    Returns:
+        Slovník selektorů
+    """
+    selectors_path = Path(selectors_file)
+    
+    if not selectors_path.exists():
+        logger.warning(f"Selektory soubor {selectors_file} nenalezen, používám výchozí")
+        return DEFAULT_SELECTORS
+    
+    try:
+        with open(selectors_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Filtrujeme metadata (položky začínající podtržítkem)
+        selectors = {k: v for k, v in data.items() if not k.startswith('_')}
+        
+        # Zkontrolujeme, zda máme platné selektory
+        empty_count = sum(1 for v in selectors.values() if not v.get('primary'))
+        
+        if empty_count > 0:
+            logger.warning(f"{empty_count} selektorů je prázdných, používám výchozí jako fallback")
+        
+        logger.info(f"Selektory načteny z {selectors_file}")
+        return selectors
+        
+    except Exception as e:
+        logger.error(f"Chyba při načítání selektorů: {e}")
+        return DEFAULT_SELECTORS
+
+
+def get_selector(driver, selector_key: str, selectors: dict, by_type: str = "css") -> Optional[object]:
+    """Najde element pomocí primárního nebo fallback selektorů.
+    
+    Args:
+        driver: Selenium WebDriver
+        selector_key: Klíč selektoru (např. 'title_input')
+        selectors: Slovník selektorů
+        by_type: 'css' nebo 'xpath'
+        
+    Returns:
+        Nalezený WebElement nebo None
+    """
+    if selector_key not in selectors:
+        # Zkusit výchozí selektory
+        if selector_key in DEFAULT_SELECTORS:
+            try:
+                return driver.find_element("css selector", DEFAULT_SELECTORS[selector_key])
+            except:
+                pass
+        return None
+    
+    selector_data = selectors[selector_key]
+    
+    # Zkusit primární selektor
+    primary = selector_data.get('primary')
+    if primary:
+        try:
+            if by_type == "xpath" and selector_data.get('xpath'):
+                return driver.find_element("xpath", selector_data['xpath'])
+            return driver.find_element("css selector", primary)
+        except:
+            pass
+    
+    # Zkusit fallback selektory
+    for fallback in selector_data.get('fallback', []):
+        try:
+            return driver.find_element("css selector", fallback)
+        except:
+            continue
+    
+    # Zkusit výchozí selektory jako poslední zálohu
+    if selector_key in DEFAULT_SELECTORS:
+        try:
+            return driver.find_element("css selector", DEFAULT_SELECTORS[selector_key])
+        except:
+            pass
+    
+    return None
+
+
 class EtsyUploader:
     """Etsy Browser Bulk Uploader class."""
     
-    # Etsy selectors - these may need adjustment based on Etsy UI
-    SELECTORS = {
-        "login_email": 'input[type="email"]',
-        "login_password": 'input[type="password"]',
-        "login_button": 'button[type="submit"]',
-        "add_listing": 'a[href*="/listings/new"]',
-        "title_input": 'input[name="title"]',
-        "description_editor": 'div[data-input="description"]',
-        "price_input": 'input[name="price"]',
-        "quantity_input": 'input[name="quantity"]',
-        "category_button": 'button[data-category]',
-        "digital_checkbox": 'input[name="is_digital"]',
-        "image_upload": 'input[type="file"][accept*="image"]',
-        "image_dropzone": 'div[data-upload-area]',
-        "tags_input": 'input[data-tag-input]',
-        "publish_button": 'button:contains("Publish")',
-        "save_draft_button": 'button:contains("Save as draft")',
-    }
-    
-    def __init__(self, config_path: str = "config.json"):
+    def __init__(self, config_path: str = "config.json", selectors_file: str = "src/selectors.json"):
         """Initialize uploader with configuration.
         
         Args:
             config_path: Path to configuration JSON file
+            selectors_file: Path to selectors JSON file
         """
         self.config = self.load_config(config_path)
+        self.selectors = load_selectors(selectors_file)
         self.driver = None
         self.success_count = 0
         self.failed_count = 0
         self.start_time = None
         
+        logger.info(f"Inicializace uploaderu s {len(self.selectors)} selektory")
+    
     def load_config(self, config_path: str) -> dict:
         """Load configuration from JSON file.
         
@@ -97,6 +192,29 @@ class EtsyUploader:
             "csv_file": "products.csv",
         }
     
+    def find_element(self, selector_key: str, by_type: str = "css", timeout: int = 10) -> Optional[object]:
+        """Najde element pomocí dynamických selektorů.
+        
+        Args:
+            selector_key: Klíč selektoru
+            by_type: 'css' nebo 'xpath'
+            timeout: Čekací timeout
+            
+        Returns:
+            WebElement nebo None
+        """
+        element = get_selector(self.driver, selector_key, self.selectors, by_type)
+        
+        if element:
+            # Zkontrolovat, zda je element viditelný
+            try:
+                if element.is_displayed():
+                    return element
+            except:
+                pass
+        
+        return None
+    
     def login(self) -> bool:
         """Log in to Etsy.
         
@@ -109,45 +227,32 @@ class EtsyUploader:
             self.driver.get(self.config.get("etsy_url", "https://www.etsy.com/signin"))
             random_delay(2, 5)
             
-            # Enter email
-            email_input = wait_for_element(
-                self.driver, 
-                self.SELECTORS["login_email"],
-                timeout=10
-            )
+            # Najít a vyplnit email
+            email_input = self.find_element("login_email")
             if email_input:
                 email_input.send_keys(self.config.get("email", ""))
                 logger.info("Email entered")
             
             random_delay(1, 3)
             
-            # Enter password
-            password_input = wait_for_element(
-                self.driver,
-                self.SELECTORS["login_password"],
-                timeout=10
-            )
+            # Najít a vyplnit heslo
+            password_input = self.find_element("login_password")
             if password_input:
                 password_input.send_keys(self.config.get("password", ""))
                 logger.info("Password entered")
             
             random_delay(1, 2)
             
-            # Click login button
-            login_button = wait_for_element(
-                self.driver,
-                self.SELECTORS["login_button"],
-                clickable=True,
-                timeout=10
-            )
+            # Kliknout na tlačítko přihlášení
+            login_button = self.find_element("login_button")
             if login_button:
                 safe_click(self.driver, login_button)
                 logger.info("Login button clicked")
             
-            # Wait for login to complete
+            # Počkat na přihlášení
             random_delay(3, 6)
             
-            # Verify login success (check for dashboard elements)
+            # Ověřit úspěch přihlášení
             current_url = self.driver.current_url
             if "signin" not in current_url.lower():
                 logger.info("Login successful!")
@@ -173,17 +278,13 @@ class EtsyUploader:
         logger.info(f"Uploading product: {product.get('title', 'Unknown')}")
         
         try:
-            # Navigate to add listing page
+            # Navigovat na stránku nového inzerátu
             add_listing_url = self.config.get("etsy_url", "").replace("/manage", "/listings/new")
             self.driver.get(add_listing_url)
             random_delay(2, 4)
             
-            # Fill title
-            title_input = wait_for_element(
-                self.driver,
-                self.SELECTORS["title_input"],
-                timeout=10
-            )
+            # Vyplnit název
+            title_input = self.find_element("title_input")
             if title_input:
                 title_input.clear()
                 title_input.send_keys(product.get("title", ""))
@@ -191,34 +292,27 @@ class EtsyUploader:
             
             random_delay(1, 3)
             
-            # Fill description
+            # Vyplnit popis
             description = product.get("description", "")
             if description:
-                # Try to fill description - Etsy uses rich text editor
                 try:
-                    desc_editor = self.driver.find_element(
-                        "css selector", 
-                        self.SELECTORS["description_editor"]
-                    )
-                    desc_editor.click()
-                    random_delay(0.5, 1)
-                    self.driver.execute_script(
-                        f"arguments[0].innerHTML = '{description}';", 
-                        desc_editor
-                    )
-                    logger.debug("Description filled")
+                    desc_editor = self.find_element("description_editor")
+                    if desc_editor:
+                        desc_editor.click()
+                        random_delay(0.5, 1)
+                        self.driver.execute_script(
+                            f"arguments[0].innerHTML = '{description}';", 
+                            desc_editor
+                        )
+                        logger.debug("Description filled")
                 except Exception as e:
                     logger.warning(f"Could not fill description: {e}")
             
             random_delay(1, 3)
             
-            # Fill price
+            # Vyplnit cenu
             price = product.get("price", "9.99")
-            price_input = wait_for_element(
-                self.driver,
-                self.SELECTORS["price_input"],
-                timeout=10
-            )
+            price_input = self.find_element("price_input")
             if price_input:
                 price_input.clear()
                 price_input.send_keys(str(price))
@@ -226,13 +320,9 @@ class EtsyUploader:
             
             random_delay(1, 2)
             
-            # Fill quantity (default 999 for digital)
+            # Vyplnit množství
             quantity = product.get("quantity", 999)
-            quantity_input = wait_for_element(
-                self.driver,
-                self.SELECTORS["quantity_input"],
-                timeout=10
-            )
+            quantity_input = self.find_element("quantity_input")
             if quantity_input:
                 quantity_input.clear()
                 quantity_input.send_keys(str(quantity))
@@ -240,11 +330,11 @@ class EtsyUploader:
             
             random_delay(1, 3)
             
-            # Upload images
+            # Nahrát obrázky
             image_paths = product.get("image_paths", "")
             if image_paths:
                 image_list = image_paths.split(";") if ";" in image_paths else [image_paths]
-                for img_path in image_list[:10]:  # Max 10 images
+                for img_path in image_list[:10]:
                     if img_path.strip():
                         try:
                             self.upload_image(img_path.strip())
@@ -253,38 +343,42 @@ class EtsyUploader:
             
             random_delay(2, 5)
             
-            # Set digital product checkbox
+            # Nastavit digitální produkt
             self.set_digital_product()
             
             random_delay(1, 3)
             
-            # Add tags
+            # Přidat štítky
             tags = product.get("tags", "")
             if tags:
                 self.add_tags(tags)
             
             random_delay(2, 4)
             
-            # Scroll to bottom
+            # Scroll dolů
             human_like_scroll(self.driver, "down", 2)
             
-            # Save or publish
-            # Try publish first, fall back to save draft
+            # Publikovat nebo uložit jako koncept
             try:
-                publish_button = self.driver.find_element(
-                    "xpath", 
-                    "//button[contains(text(), 'Publish')]"
-                )
-                safe_click(self.driver, publish_button)
-                logger.info("Product published!")
-            except:
+                publish_button = self.find_element("publish_button")
+                if publish_button:
+                    safe_click(self.driver, publish_button)
+                    logger.info("Product published!")
+                else:
+                    # Zkusit XPath pro tlačítko publikování
+                    publish_buttons = self.driver.find_elements("xpath", "//button[contains(text(), 'Publish')]")
+                    if publish_buttons:
+                        safe_click(self.driver, publish_buttons[0])
+                        logger.info("Product published!")
+                    else:
+                        raise Exception("Publish button not found")
+            except Exception as e:
+                logger.warning(f"Could not publish: {e}")
                 try:
-                    save_button = self.driver.find_element(
-                        "xpath",
-                        "//button[contains(text(), 'Save')]"
-                    )
-                    safe_click(self.driver, save_button)
-                    logger.info("Product saved as draft")
+                    save_button = self.find_element("save_draft_button")
+                    if save_button:
+                        safe_click(self.driver, save_button)
+                        logger.info("Product saved as draft")
                 except:
                     logger.warning("Could not find publish/save button")
             
@@ -307,10 +401,9 @@ class EtsyUploader:
             True if upload successful, False otherwise
         """
         try:
-            # Convert to absolute path
             abs_path = str(Path(image_path).absolute())
             
-            # Find file input
+            # Zkusit najít input pro upload
             file_inputs = self.driver.find_elements("css selector", 'input[type="file"]')
             
             for file_input in file_inputs:
@@ -320,11 +413,11 @@ class EtsyUploader:
                     random_delay(2, 4)
                     return True
             
-            # Try dropzone
+            # Fallback - zkusit dropzone
             try:
-                dropzone = self.driver.find_element("css selector", self.SELECTORS["image_dropzone"])
-                # Some Etsy uploads need drag and drop or click
-                file_input = dropzone.find_element("css selector", 'input[type="file"]')
+                dropzone = self.driver.find_element("css selector", 
+                    self.selectors.get("image_dropzone", {}).get("primary", 'div[data-upload-area]'))
+                file_input = dropzone.find_element('css selector', 'input[type="file"]')
                 file_input.send_keys(abs_path)
                 logger.info(f"Image uploaded via dropzone: {image_path}")
                 return True
@@ -345,15 +438,11 @@ class EtsyUploader:
             True if successful, False otherwise
         """
         try:
-            # Look for digital checkbox or toggle
-            digital_options = self.driver.find_elements(
-                "xpath",
-                "//label[contains(text(), 'Digital')]//input[@type='checkbox']"
-            )
-            
-            for checkbox in digital_options:
-                if not checkbox.is_selected():
-                    safe_click(self.driver, checkbox)
+            # Zkusit najít checkbox pro digitální produkt
+            digital_checkbox = self.find_element("digital_checkbox")
+            if digital_checkbox:
+                if not digital_checkbox.is_selected():
+                    safe_click(self.driver, digital_checkbox)
                     logger.info("Digital product option enabled")
             
             return True
@@ -374,19 +463,26 @@ class EtsyUploader:
         try:
             tags = [t.strip() for t in tags_string.split(",")]
             
-            for tag in tags[:13]:  # Etsy allows max 13 tags
+            # Najít input pro štítky
+            tag_input = self.find_element("tags_input")
+            
+            if not tag_input:
+                # Fallback - hledat obecněji
                 try:
-                    tag_input = self.driver.find_element(
-                        "css selector",
-                        'input[placeholder*="tag"]'
-                    )
+                    tag_input = self.driver.find_element("css selector", 'input[placeholder*="tag" i]')
+                except:
+                    pass
+            
+            if not tag_input:
+                logger.warning("Could not find tag input")
+                return False
+            
+            for tag in tags[:13]:  # Etsy max 13 tags
+                try:
                     tag_input.send_keys(tag)
                     random_delay(0.5, 1)
-                    
-                    # Press enter to add tag
                     tag_input.send_keys("\n")
                     logger.debug(f"Tag added: {tag}")
-                    
                 except Exception as e:
                     logger.warning(f"Could not add tag: {tag}")
             
@@ -410,7 +506,7 @@ class EtsyUploader:
         logger.info(f"Starting bulk upload from {csv_path}")
         self.start_time = datetime.now()
         
-        # Load products
+        # Načíst produkty
         try:
             products = read_products_csv(csv_path)
         except Exception as e:
@@ -420,23 +516,23 @@ class EtsyUploader:
         total = len(products)
         logger.info(f"Found {total} products to upload")
         
-        # Create driver
+        # Vytvořit driver
         headless = self.config.get("headless", False)
         self.driver = create_driver(headless=headless)
         
-        # Login
+        # Přihlášení
         if not self.login():
             logger.error("Login failed, aborting")
             self.driver.quit()
             return {"success": 0, "failed": total, "total": total}
         
-        # Upload each product
+        # Nahrát každý produkt
         for i, product in enumerate(products):
             logger.info(f"Uploading product {i+1}/{total}")
             
-            # Check rate limiting
+            # Rate limiting
             if i > 0 and i % 10 == 0:
-                delay = 30  # 30 second pause every 10 products
+                delay = 30
                 logger.info(f"Rate limit pause: {delay}s")
                 time.sleep(delay)
             
@@ -447,15 +543,15 @@ class EtsyUploader:
             else:
                 self.failed_count += 1
             
-            # Random delay between products
+            # Náhodné zpoždění mezi produkty
             delay_min = self.config.get("delay_min", 2)
             delay_max = self.config.get("delay_max", 10)
             random_delay(delay_min, delay_max)
         
-        # Close browser
+        # Zavřít prohlížeč
         self.driver.quit()
         
-        # Calculate elapsed time
+        # Vypočítat elapsed time
         elapsed = (datetime.now() - self.start_time).total_seconds()
         
         results = {
@@ -492,6 +588,11 @@ def main():
         help='Configuration file (default: config.json)'
     )
     parser.add_argument(
+        '--selectors',
+        default='src/selectors.json',
+        help='Selectors file (default: src/selectors.json)'
+    )
+    parser.add_argument(
         '--product-id',
         type=int,
         help='Product ID for single mode (row number in CSV)'
@@ -504,37 +605,37 @@ def main():
     
     args = parser.parse_args()
     
-    # Create uploader
-    uploader = EtsyUploader(config_path=args.config)
+    # Vytvořit uploader s vlastními selektory
+    uploader = EtsyUploader(config_path=args.config, selectors_file=args.selectors)
     
-    # Override headless setting if specified
+    # Přepsat headless nastavení
     if args.headless:
         uploader.config["headless"] = True
     
-    # Run in specified mode
+    # Spustit v zadaném režimu
     if args.mode == 'single':
         if not args.product_id:
             logger.error("Product ID required for single mode")
             return 1
         
-        # Load products and get specific one
+        # Načíst produkty
         try:
             products = read_products_csv(args.csv)
-            product = products[args.product_id - 1]  # 1-based index
+            product = products[args.product_id - 1]
         except Exception as e:
             logger.error(f"Error loading product: {e}")
             return 1
         
-        # Create driver
+        # Vytvořit driver
         uploader.driver = create_driver(headless=uploader.config.get("headless", False))
         
-        # Login
+        # Přihlášení
         if not uploader.login():
             logger.error("Login failed")
             uploader.driver.quit()
             return 1
         
-        # Upload product
+        # Nahrát produkt
         success = uploader.upload_single_product(product)
         
         uploader.driver.quit()

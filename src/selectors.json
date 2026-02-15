@@ -1,0 +1,86 @@
+{
+  "_comment": "Etsy Browser Selectors - Generováno pomocí selector_recorder.py",
+  "_version": "1.0",
+  "_last_updated": "",
+  
+  "login_email": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "login_password": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "login_button": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "add_listing": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "title_input": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "description_editor": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "price_input": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "quantity_input": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "image_upload": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "image_dropzone": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "tags_input": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "digital_checkbox": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "category_button": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "publish_button": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "save_draft_button": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  },
+  "shop_section_select": {
+    "primary": "",
+    "fallback": [],
+    "xpath": ""
+  }
+}

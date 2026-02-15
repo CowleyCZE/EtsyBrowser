@@ -206,3 +206,23 @@ def upload_file(driver, file_input_selector: str, file_path: str) -> bool:
     except Exception as e:
         logger.error(f"File upload failed: {e}")
         return False
+
+
+def find_element_by_any_selector(driver, selectors: list) -> Optional[webdriver.remote.webelement.WebElement]:
+    """Najde element pomocí libovolného ze zadaných selektorů.
+    
+    Args:
+        driver: Selenium WebDriver
+        selectors: Seznam CSS selektorů
+        
+    Returns:
+        Nalezený element nebo None
+    """
+    for selector in selectors:
+        try:
+            element = driver.find_element(By.CSS_SELECTOR, selector)
+            if element and element.is_displayed():
+                return element
+        except:
+            continue
+    return None
