@@ -1,135 +1,140 @@
-# Nástroj pro hromadné nahrávání do prohlížeče Etsy pro StorkVisionArt
+# EtsyBrowser
 
-Automatizační nástroj založený na technologii Selenium pro hromadné nahrávání digitálních produktů na Etsy bez použití oficiálního API.
+Automatizační nástroj pro hromadné nahrávání produktů na Etsy bez použití oficiálního API.
 
 ## Funkce
 
-- **Režim rychlé úpravy**: Automatické vyplňování formuláře Etsy z dat CSV
-- **Režim hromadné úpravy**: Stáhněte si šablonu Etsy CSV, naplňte daty, nahrajte zpět
-- **Nahrávání obrázků**: Přetáhněte a vložte nebo vyberte soubor až pro 10 obrázků na produkt
-- **Inteligentní vyplňování**: Rozbalovací nabídka kategorií, automaticky generované štítky, ověření ceny
-- **Automatizace podobná lidskému modelu**: Náhodné zpoždění, posouvání, pohyby myši, aby se zabránilo detekci botů
+- **Selector Recorder** - Automatická detekce a konfigurace CSS selektorů
+- **Režim jednoho produktu** - Nahrání jednoho produktu pro testování
+- **Hromadný režim** - Nahrání všech produktů z CSV souboru
+- **Automatizace podobná lidskému modelu** - Náhodná zpoždění, scrollování, pohyby myši
+- **Dynamické selektory** - Snadná aktualizace při změnách Etsy UI
+
+## Rychlý start
+
+### 1. Instalace
+
+```bash
+git clone https://github.com/CowleyCZE/EtsyBrowser.git
+cd EtsyBrowser
+pip install -r requirements.txt
+```
+
+Více v [setup.md](./setup.md)
+
+### 2. Konfigurace
+
+Upravte `config.json` s vašimi přihlašovacími údaji:
+
+```json
+{
+  "etsy_url": "https://www.etsy.com/your/shops/NAZEV_OBCHODU/manage",
+  "email": "vas_email@email.com",
+  "password": "vase_heslo"
+}
+```
+
+### 3. Konfigurace selektorů
+
+```bash
+python src/selector_recorder.py \
+  --url "https://www.etsy.com/your/shops/NAZEV/listings/new" \
+  --mode both
+```
+
+### 4. Spuštění
+
+```bash
+# Hromadné nahrávání
+python src/uploader.py --mode bulk
+
+# Jeden produkt (testování)
+python src/uploader.py --mode single --product-id 1
+```
+
+## Dokumentace
+
+| Soubor | Popis |
+|--------|-------|
+| [setup.md](./setup.md) | Kompletní návod k instalaci |
+| [manual.md](./manual.md) | Podrobný návod k použití |
+| [SELECTOR_RECORDER.md](./SELECTOR_RECORDER.md) | Dokumentace Selector Recorderu |
+
+## Tech Stack
+
+- **Python 3.10+**
+- **Selenium 4.15.2** - Prohlížečová automatizace
+- **WebDriver Manager 4.0.1** - Správa ChromeDriver
+- **Pandas 2.1.4** - Práce s CSV
+- **Pillow 10.1.0** - Zpracování obrázků
+- **Selenium Stealth 1.0.6** - Ochrana před detekcí botů
 
 ## Podporovaná pole Etsy
 
 ### Povinné
-- název
-- popis (HTML)
-- cena
-- množství (999 pro digitální)
-- obrázky (až 10)
+- Název produktu
+- Popis (HTML)
+- Cena
+- Množství (999 pro digitální)
+- Obrázky (až 10)
 
-### Kategorie
-- Umění a sběratelské předměty > Tisky > Digitální tisky/Nástěnné umění
-
-### Stav nabídky
-- Stav: Aktivní
-- Kdo vytvořil: AI_GENERATED
-- Je digitální: ANO
-
-### Štítky
-- 13 automaticky generovaných štítků (např. „digitální umění, tisk AI, nástěnná dekorace, moderní umění...“)
-
-### Doprava
-- Digitální stažení (ne (doprava (vyžadováno)
-
-## Tech Stack
-
-- Python 3.10+
-- Selenium 4.15.2
-- WebDriver Manager 4.0.1
-- Pandas 2.1.4
-- Pillow 10.1.0
+### Volitelné
+- Štítky (max 13)
+- Kategorie
+- Sekce obchodu
+- Digitalní produkt ( automaticky nastaveno)
 
 ## Struktura projektu
 
 ```
-├── config.json # Přihlášení a nastavení Etsy
-├── products.csv # Zdrojová data produktu
-├── requirements.txt # Závislosti Pythonu
+EtsyBrowser/
 ├── src/
-│ ├── __init__.py
-│ ├── browser_utils.py # Nastavení a pomocníci prohlížeče Selenium
-│ ├── fill_csv.py # Výplň CSV
-│ ├── logger.py # Konfigurace protokolování
-│ └── uploader.py # Hlavní skript pro nahrávání
-├── images/ # Adresář obrázků produktu
-└── logs/ # Snímky obrazovky a protokoly chyb
+│   ├── uploader.py           # Hlavní skript pro nahrávání
+│   ├── selector_recorder.py # Nástroj pro zaznamenávání selektorů
+│   ├── browser_utils.py     # Pomocné funkce pro Selenium
+│   ├── fill_csv.py          # Zpracování CSV
+│   ├── logger.py            # Logování
+│   └── selectors.json       # Konfigurace selektorů
+├── images/                  # Obrázky produktů
+├── products.csv             # Data produktů
+├── config.json             # Konfigurace
+├── setup.md                # Návod k instalaci
+├── manual.md               # Návod k použití
+└── requirements.txt        # Python závislosti
 ```
 
-## Struktura CSV (products.csv)
+## CSV formát
 
 ```csv
-title, description, price, tags, category_path, image_paths, shop_section
-"Neonový tisk městské krajiny","<b>Digitální tisk městské krajiny vygenerovaný umělou inteligencí</b>. Okamžité stažení.",12.99,"digital art,neon,cityscape,modern,wall art,printable","Art&Collectibles:Prints:DigitalPrints","./images/neon01.jpg;./images/neon02.jpg","Digitální tisky vygenerované umělou inteligencí"
+title,description,price,tags,category_path,image_paths,shop_section
+"Název","<b>Popis</b>",12.99,"tag1,tag2,tag3","Art&Collectibles:Prints:DigitalPrints","./images/img1.jpg","Sekce"
 ```
 
-## Pracovní postup
+## Řešení problémů
 
-1. **START** → Přihlaste se na etsy.com/your/shops/StorkVisionArt/manage
-2. **MODE1 (Jednotlivě)**: Přidat inzerát → Vyplnit formulář → Nahrát obrázky → Publikovat
-3. **REŽIM2 (Hromadně)**: Nástroje → Hromadná úprava CSV → Stáhnout šablonu → Vyplnit → nahrát
-4. **OVĚŘENÍ**: Kontrola úspěchu → uložit listing_id → další produkt
-5. **ŘEŠENÍ CHYB**: Snímek obrazovky + opakovat 3x → přeskočit → protokolovat
-6. **HOTOVO**: Zpráva (X/100 úspěšné, uplynulý čas)
-
-## Instalace
-
+### Selektory nefungují
+Spusťte Selector Recorder znovu:
 ```bash
-git clone <repo>
-pip install -r requirements.txt
-cp config.example.json config.json # Přidat e-mail/heslo
-python fill_csv.py # Vyplnit šablonu Etsy z vašeho CSV
-python uploader.py --mode bulk --headless
+python src/selector_recorder.py --url "URL" --mode both
 ```
-
-## Konfigurace
-
-Upravte `config.json` pomocí svých přihlašovacích údajů Etsy:
-
-```json
-{
-"etsy_url": "https://www.etsy.com/your/shops/StorkVisionArt/manage",
-"email": "your@email.com",
-"password": "your_password",
-"headless": false,
-"delay_min": 2,
-"delay_max": 10,
-"max_products_per_hour": 50
-}
-```
-
-## Použití
-
-### Režim jednoho produktu
-```bash
-python uploader.py --mode single --product-id 1
-```
-
-### Hromadný režim
-```bash
-python uploader.py --mode bulk --headless
-```
-
-### S vlastním CSV
-```bash
-python uploader.py --csv custom_products.csv
-```
-
-## Výhody oproti API
-
-- ✅ Není vyžadováno schválení API (funguje ihned po instalaci)
-- ✅ Podporuje varianty, personalizaci, slevy
-- ✅ Aktualizace Etsy se aplikují automaticky
-- ✅ Náhled před publikováním
-
-## Omezení a alternativní řešení
 
 ### Detekce botů
-- **Řešení**: selenium-stealth, náhodní uživatelští agenti, lidské zpoždění
-
-### Limity rychlosti (~10/min)
-- **Řešení**: 30s pauza mezi produkty, max. 50/hod
+- Zvyšte `delay_min` a `delay_max` v config.json
+- Vypněte headless režim
 
 ### Captcha
-- **Řešení**: Záložní přihlášení 2FA, příznak ručního zásahu
+- Řešte manuálně v prohlížeči
+- Skript pokračuje automaticky po vyřešení
+
+## Bezpečnostní upozornění
+
+⚠️ Tento nástroj může být v rozporu s podmínkami služby Etsy. Používejte na vlastní riziko.
+
+Doporučení:
+- Používejte nižší rychlosti nahrávání
+- Pravidelně kontrolujte váš účet
+- Nepronehrávat příliš mnoho produktů za hodinu
+
+## Licence
+
+MIT License
