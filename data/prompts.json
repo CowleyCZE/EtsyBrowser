@@ -1,0 +1,109 @@
+{
+    "bundles": [
+        {
+            "theme_name": "Cozy-Core Dětské Emocionální Plakáty",
+            "visual_style": "Klidná a uklidňující estetika (Cozy-core) s antropomorfními zvířecími postavičkami. Měkké, matné textury, ilustrativní styl akvarelu/pastelky s mírně zrnitým vzhledem. Barevná paleta je založena na tlumených zemitých tónech a neutrálech (terakota, šalvějově zelená, krémová).",
+            "description": "Exkluzivní sada 12 edukačních plakátů zaměřených na behaviorální dovednosti a emoční regulaci pro děti. Každý plakát zobrazuje roztomilou zvířecí postavu (např. želvu, lišku, medvěda) modelující pozitivní chování (jako je 'Deep Breath' nebo 'Share Your Toys'). Perfektní pro dětské pokoje, školky nebo terapeutické praxe. Zahrnuje tiskové soubory ve vysokém rozlišení (300 DPI) v poměrech 2:3 a 4:5.",
+            "keywords": [
+                "dětské plakáty",
+                "emoční regulace",
+                "behaviorální postavy",
+                "cozy core dětský pokoj",
+                "edukační wall art",
+                "nástěnná dekorace školka",
+                "ilustrace zvířat"
+            ],
+            "prompts": [
+                "A soft, grainy watercolor illustration of an anthropomorphic tortoise character sitting calmly and taking a 'deep breath'. Use a muted palette of sage green, terracotta, and cream. Style: Cozy-core children's illustration, high resolution, 300 DPI, 2:3 aspect ratio, slightly textured paper effect.",
+                "A playful, gentle illustration of a fox character sharing a toy block with a rabbit character. Text overlay: 'We Share'. Style: Minimalist behavioral poster, soft shading, clean lines, matte finish. Color scheme: Dusty rose, mustard yellow, and beige.",
+                "Generate a seamless pattern background featuring small, irregular hand-drawn stars and moons. Use only two colors: Muted olive green on a pale linen background. Style: Hand-drawn texture, suitable for wall art border or flashcard backing.",
+                "A set of six printable flashcards templates (3.5x5 inches) featuring simple icons representing emotions (happy, sad, angry, calm). Each card must have a rounded corner design and a soft, two-tone border (light grey and cream).",
+                "Design a mockup template showing a series of six behavioral posters framed in simple light wood frames displayed on a white wall in a sunlit Scandinavian-style nursery. The posters must be clearly visible and high contrast."
+            ]
+        },
+        {
+            "theme_name": "Gingham & Two-Tone Cozy-Core Vzory",
+            "visual_style": "Sofistikovaná interpretace Gingham a Two-Tone trendů. Maloskalární, texturované bezešvé vzory s jemnými detaily lineární botaniky. Paleta je záměrně omezena na dvě komplementární barvy (např. karamelová a bílá, tmavě modrá a krémová), s důrazem na textilní vzhled.",
+            "description": "Dokonalá sada 20 prémiových bezešvých vzorů v estetice Cozy-Core a Cottagecore. Ideální pro digitální scrapbooking, tisk na látky (POD), balicí papír nebo digitální pozadí. Balíček obsahuje tradiční Gingham v různých měřítkách, proužky a drobné botanické motivy v jednotné dvoubarevné paletě pro snadnou kombinovatelnost. Všechny vzory jsou ve formátu PNG s transparentním pozadím a ve vysokém rozlišení (3600x3600 px, 300 DPI).",
+            "keywords": [
+                "bezešvé vzory gingham",
+                "two tone vzory",
+                "cozy core digitální papír",
+                "cottagecore pattern pack",
+                "textilní design pro pod",
+                "neutrální bezešvé vzory",
+                "karamel a krém vzor"
+            ],
+            "prompts": [
+                "Create a seamless repeating pattern of small-scale, sophisticated gingham plaid. Color palette must be limited to deep navy blue and off-white (cream). The texture must resemble a slightly woven, high-quality linen fabric. 3600x3600 pixels, 300 DPI.",
+                "Generate a second seamless pattern featuring delicate, continuous line art of wheat stalks and small wildflowers. Use the exact same navy blue and cream two-tone palette as the gingham pattern for perfect color coordination.",
+                "A third pattern: Simple, unevenly distributed tiny dots forming a repeating scatter design. Use the navy and cream palette. The pattern must feel slightly imperfect, conveying a hand-stamped or cozy aesthetic.",
+                "Design a mockup showing the entire pattern pack applied to various print-on-demand items: a tea towel, a tote bag, and a phone case, highlighting the consistency of the two-tone color scheme across products.",
+                "A high-resolution seamless pattern of thick, alternating horizontal stripes (two inches wide). Colors: Warm caramel brown and crisp white. Style: Clean, yet slightly textured digital paper."
+            ]
+        },
+        {
+            "theme_name": "Retro 90s Doodle Abeceda a Designové Kity",
+            "visual_style": "Hravá, robustní (chunky) estetika 90. let, inspirovaná kreslenými logy a dětským písmem. Důraz na obrysy (outlines), lehké stínování a základní, jasné barvy (neonově růžová, elektrická modrá, citronově žlutá). Styl je ideální pro digitální scrapbooking a personalizované dárky.",
+            "description": "Mega balíček doodle abecedy a retro designových prvků pro rok 2026. Obsahuje kompletní sadu 'Bubble Doodle' písmen (A-Z, 0-9) a přes 50 doprovodných grafických prvků (hvězdy, šipky, vlny) ve stylu 90. let. Ideální pro tvorbu personalizovaných hrníčků, triček a digitálních plakátů. Dodáno jako PNG soubory (300 DPI) s průhledným pozadím a vektorové SVG soubory pro snadnou úpravu velikosti.",
+            "keywords": [
+                "retro 90s abeceda",
+                "doodle letters chunky",
+                "bubble font png",
+                "vintage 90s clipart",
+                "scrapbooking abeceda",
+                "personalizované dárky design",
+                "chunky outline font"
+            ],
+            "prompts": [
+                "Generate a complete alphabet (A-Z, uppercase) in a robust, chunky 'Bubble Doodle' style. Each letter must have a thick black outline and a single-color, slightly textured neon pink fill. Output as individual PNG files with transparent background.",
+                "Create 20 isolated graphic elements (e.g., squiggly lines, asymmetric stars, lightning bolts) matching the thick black outline and neon pink/electric blue color scheme of the 90s doodle alphabet. Include slight, stylized inner shadows for depth.",
+                "Design a seamless repeating pattern of abstract, overlapping wavy lines (like a retro school notebook). Use electric blue, neon green, and black outlines. Must be playful and maximalist.",
+                "Illustrate three distinct banner shapes in the 90s doodle style, suitable for text overlays. Use heavy black outlines and a lemon yellow fill, keeping the corners rounded and exaggerated.",
+                "Mockup showing the 'Bubble Doodle' letters used to spell a personalized name on a white ceramic mug and a black oversized t-shirt, emphasizing the bold, playful aesthetic."
+            ]
+        },
+        {
+            "theme_name": "Glam Cocktail Bar Ephemera Kit",
+            "visual_style": "Elevovaná vintage estetika zaměřená na koktejlový trend a zábavu. Kombinace elegantních line-art prvků (martini sklenice, barové nástroje) s texturami digitálního scrapbookingu (starý papír, zlatá fólie, voskové pečetě). Paleta: Zlato, černá, krémová a tmavě bordó.",
+            "description": "Luxusní digitální balíček pro scrapbooking, diáře a plánování večírků. Zahrnuje 80 unikátních kousků ephemera: staré receptové karty, menu s elegantní typografií, digitální voskové pečetě, kliparty s martini sklenicemi a dekorativní okraje s motivem art deco. Ideální pro digitální deníky (GoodNotes) nebo tištěné pozvánky. Všechny PNG jsou připraveny k použití a obsahují simulované textury starého papíru pro realistický vzhled.",
+            "keywords": [
+                "digitální scrapbooking koktejly",
+                "bar cart wall art",
+                "ephemera kit vintage",
+                "martini line art",
+                "glam printable art",
+                "digitální receptové karty",
+                "vintage pozvánky"
+            ],
+            "prompts": [
+                "Generate a detailed, continuous line art illustration of a classic martini glass with an olive, emphasizing elegance and minimalist sophistication. Output as a clean black PNG clipart with high resolution.",
+                "Create a collection of 15 digital ephemera pieces, including vintage-style cocktail recipe cards (3x5 inches) with ornamental gold foil borders. Text fields should be editable but use an elegant, high-contrast serif font (e.g., Art Deco style).",
+                "Illustrate four realistic digital wax seals (PNG) featuring a monogram or a stylized cocktail shaker icon. Colors: Deep bordó and metallic gold texture, showing slight melting imperfection on the edges.",
+                "Design a set of six patterned digital paper sheets (12x12 inches) suitable for scrapbooking. Patterns must include a small-scale geometric Art Deco motif and a distressed cream paper texture overlay.",
+                "Create a layered PNG element showing a stack of three vintage-style bar tickets (numbered 001, 002, 003) tied together with a dark burgundy ribbon, simulating a physical paper texture and shadow for digital scrapbooking."
+            ]
+        },
+        {
+            "theme_name": "Minimalistické Frame TV Art Balíčky Vzorů",
+            "visual_style": "Abstraktní, minimalistické vzory a texturované pozadí, optimalizované pro digitální displeje (Frame TV). Důraz na dvoubarevné kompozice a klidné, sofistikované palety vhodné do moderních obývacích pokojů.",
+            "description": "Kolekce 10 exkluzivních Frame TV Art designů s bezešvými, abstraktními vzory. Tyto umělecké kousky jsou speciálně formátovány v rozlišení 3840x2160 (4K) a poměru stran 16:9, aby se dokonale hodily na Frame TV. Zahrnuje texturované geometrické vzory, jemné pruhy a abstraktní tahy štětcem, ideální pro celoroční minimalistickou výzdobu. Každý design je dodán jako vysoce kvalitní JPG soubor.",
+            "keywords": [
+                "frame tv art minimalistický",
+                "16:9 digitální umění",
+                "abstraktní frame tv vzory",
+                "dvoubarevný tv art",
+                "minimalistické dekorace obývací pokoj",
+                "4k digitální pozadí",
+                "bezešvé vzory frame tv"
+            ],
+            "prompts": [
+                "Design a minimalist Frame TV art image (3840x2160 px, JPG) featuring an abstract, organic stripe pattern running vertically. Use a calming two-tone color palette of desaturated terracotta and soft beige. The stripes should have a slight, visible brushstroke texture.",
+                "Create a second Frame TV image (16:9 ratio) showing a geometric repeating pattern of overlapping, small-scale circles. The color scheme is limited to charcoal grey and crisp white, providing high contrast and a modern aesthetic.",
+                "Generate a textured background optimized for Frame TV, simulating rough, aged concrete or plaster. Use a muted, earthy green (like moss) across the entire canvas with subtle tonal variations. Style: High-quality photo texture, minimal abstraction.",
+                "A collection of five simple, continuous line art illustrations of stylized household objects (e.g., a vase, a book, a coffee cup) overlaid on a clean, solid background of pale dusty blue. Format must be 16:9 for Frame TV display.",
+                "Design a mockup showing the Frame TV Art collection displayed on a Samsung Frame TV in a modern, well-lit living room, emphasizing how the patterns blend seamlessly with contemporary home decor."
+            ]
+        }
+    ]
+}

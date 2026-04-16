@@ -1,0 +1,59 @@
+{
+    "bundles": [
+        {
+            "theme_name": "Bundles Name 1",
+            "visual_style": "Visual style for bundles 1",
+            "prompts": [
+                "1 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "2 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "3 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "4 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "5 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible"
+            ]
+        },
+        {
+            "theme_name": "Bundles Name 2",
+            "visual_style": "Visual style for bundles 2",
+            "prompts": [
+                "1 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "2 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "3 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "4 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "5 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible"
+            ]
+        },
+        {
+            "theme_name": "Bundles Name 3",
+            "visual_style": "Visual style for bundles 3",
+            "prompts": [
+                "1 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "2 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "3 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "4 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "5 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible"
+            ]
+        },
+        {
+            "theme_name": "Bundles Name 4",
+            "visual_style": "Visual style for bundles 4",
+            "prompts": [
+                "1 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "2 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "3 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "4 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "5 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible"
+            ]
+        },
+        {
+            "theme_name": "Bundles Name 5",
+            "visual_style": "Visual style for bundles 5",
+            "prompts": [
+                "1 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "2 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "3 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "4 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible",
+                "5 Prompt which must be written in very detail and must contain all the necessary information so that the generated image is as good as possible"
+            ]
+        }
+    ]
+}

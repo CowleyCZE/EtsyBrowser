@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="cs">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup Measurement Tool s Zoomem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow: hidden;
+            /* Zabrání scrollování stránky při zoomování */
+        }
+
+        #canvas-wrapper {
+            cursor: crosshair;
+            overflow: hidden;
+            position: relative;
+            background-image:
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .measurement-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            /* Pro ostrý zoom */
+            transform-origin: 0 0;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col">
+    <div class="p-4 bg-white border-b flex items-center justify-between shrink-0">
+        <div>
+            <h1 class="text-xl font-bold text-gray-800">Mockup Tool pro Cowleyho (Perspektiva)</h1>
+        </div>
+        <div class="flex gap-4 items-center">
+            <div class="flex items-center gap-2 bg-gray-100 p-2 rounded-lg">
+                <span class="text-xs font-bold text-gray-500 uppercase">Zoom:</span>
+                <input type="range" id="zoomRange" min="0.1" max="10" step="0.1" value="1" class="w-32">
+                <span id="zoomValue" class="text-sm font-mono w-12 text-center">100%</span>
+            </div>
+
+            <div class="flex gap-1 mr-2">
+                <button id="undoBtn" title="Zpět (Undo)"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1 px-3 rounded-l disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center h-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z" />
+                        <path
+                            d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466" />
+                    </svg>
+                </button>
+                <button id="redoBtn" title="Vpřed (Redo)"
+                    class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-1 px-3 rounded-r disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center h-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                        viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z" />
+                        <path
+                            d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.466A.25.25 0 0 1 8 4.466" />
+                    </svg>
+                </button>
+            </div>
+
+            <input type="text" id="filenameInput" placeholder="Název souboru (např. sablona.png)"
+                class="border rounded px-2 py-1 text-sm w-48 mx-2" />
+
+            <input type="file" id="imageLoader" accept="image/*"
+                class="text-sm text-gray-500 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            <button id="resetBtn"
+                class="bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-4 rounded transition hidden">Reset</button>
+        </div>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-80 p-4 border-r bg-gray-50 overflow-y-auto shrink-0 flex flex-col gap-4">
+            <div id="instruction" class="measurement-card bg-blue-50 border border-blue-200">
+                <p id="instruction-text" class="text-blue-800 text-sm font-medium">Nahrajte obrázek pro začátek.</p>
+            </div>
+
+            <div id="results" class="measurement-card hidden">
+                <h2 class="font-bold text-gray-700 mb-3 border-b pb-1">Naměřené hodnoty</h2>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">PYTHON KÓD</p>
+                        <textarea id="coord-output" readonly
+                            class="w-full h-16 text-xs font-mono bg-gray-50 border p-2 rounded resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer hover:bg-gray-100 transition"
+                            onclick="this.select(); document.execCommand('copy');"></textarea>
+                    </div>
+
+                    <button id="saveBtn"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition shadow-sm">
+                        💾 Uložit do Konfigurace
+                    </button>
+                    <div id="statusMsg" class="text-xs text-center font-medium min-h-[1.5em]"></div>
+                </div>
+            </div>
+
+            <div class="mt-auto text-[11px] text-gray-400 italic">
+                Tip: Kolečko myši = Zoom<br>
+                Shift + Táhnutí = Posun (Pan)<br>
+                Klikni postupně: TL -> TR -> BR -> BL<br>
+                Použij šipky <span class="font-bold">Zpět / Vpřed</span> pro opravu.
+            </div>
+        </div>
+
+        <!-- Plocha s plátnem -->
+        <div id="canvas-wrapper" class="flex-1 flex items-center justify-center relative">
+            <p id="placeholder-text" class="text-gray-400 font-medium">Zde se zobrazí obrázek</p>
+            <canvas id="imageCanvas" class="hidden absolute"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const imageLoader = document.getElementById('imageLoader');
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const wrapper = document.getElementById('canvas-wrapper');
+        const resultsDiv = document.getElementById('results');
+        const coordOutput = document.getElementById('coord-output');
+        const instructionText = document.getElementById('instruction-text');
+        const resetBtn = document.getElementById('resetBtn');
+        const placeholderText = document.getElementById('placeholder-text');
+        const zoomRange = document.getElementById('zoomRange');
+        const zoomValue = document.getElementById('zoomValue');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const filenameInput = document.getElementById('filenameInput');
+        const saveBtn = document.getElementById('saveBtn');
+        const statusMsg = document.getElementById('statusMsg');
+
+        let img = new Image();
+        let points = [];
+        let redoStack = [];
+        let scale = 1;
+        let originX = 0;
+        let originY = 0;
+        let isPanning = false;
+        let startX, startY;
+
+        const POINT_LABELS = ["TL (Levý Horní)", "TR (Pravý Horní)", "BR (Pravý Dolní)", "BL (Levý Dolní)"];
+
+        imageLoader.addEventListener('change', handleImage, false);
+
+        // Klikání pro body (pouze pokud nedržíme Shift pro panování)
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.shiftKey) {
+                isPanning = true;
+                startX = e.clientX - originX;
+                startY = e.clientY - originY;
+                canvas.style.cursor = 'grabbing';
+            } else {
+                handleCanvasClick(e);
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isPanning) return;
+            originX = e.clientX - startX;
+            originY = e.clientY - startY;
+            applyTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isPanning = false;
+            canvas.style.cursor = 'crosshair';
+        });
+
+        // Zoom pomocí kolečka
+        wrapper.addEventListener('wheel', (e) => {
+            if (!img.src) return;
+            e.preventDefault();
+
+            const zoomSpeed = 0.001;
+            const delta = -e.deltaY;
+            const factor = Math.pow(1.1, delta / 100);
+
+            const newScale = Math.min(Math.max(scale * factor, 0.1), 20);
+
+            // Zoom na pozici kurzoru
+            const rect = wrapper.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const wx = (mouseX - originX) / scale;
+            const wy = (mouseY - originY) / scale;
+
+            scale = newScale;
+            originX = mouseX - wx * scale;
+            originY = mouseY * wy * scale; // Oprava výpočtu y
+
+            // Druhý pokus o čistší matematiku y pro stabilní zoom
+            originY = mouseY - wy * scale;
+
+            updateZoomUI();
+            applyTransform();
+        }, { passive: false });
+
+        zoomRange.addEventListener('input', (e) => {
+            const newScale = parseFloat(e.target.value);
+            // Při změně sliderem zoomujeme na střed wrapperu
+            const centerX = wrapper.clientWidth / 2;
+            const centerY = wrapper.clientHeight / 2;
+            const wx = (centerX - originX) / scale;
+            const wy = (centerY - originY) / scale;
+
+            scale = newScale;
+            originX = centerX - wx * scale;
+            originY = centerY - wy * scale;
+
+            updateZoomUI();
+            applyTransform();
+        });
+
+        undoBtn.addEventListener('click', () => {
+            if (points.length > 0) {
+                redoStack.push(points.pop());
+                drawImage();
+                updateUI();
+            }
+        });
+
+        redoBtn.addEventListener('click', () => {
+            if (redoStack.length > 0) {
+                points.push(redoStack.pop());
+                drawImage();
+                updateUI();
+            }
+        });
+
+        function handleImage(e) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                img.onload = function () {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.classList.remove('hidden');
+                    placeholderText.classList.add('hidden');
+
+                    // Set filename from file input
+                    if (e.target.files && e.target.files[0]) {
+                        filenameInput.value = e.target.files[0].name;
+                    }
+
+                    // Výchozí napasování na obrazovku
+                    const ratio = Math.min(wrapper.clientWidth / img.width, wrapper.clientHeight / img.height) * 0.9;
+                    scale = ratio;
+                    originX = (wrapper.clientWidth - img.width * scale) / 2;
+                    originY = (wrapper.clientHeight - img.height * scale) / 2;
+
+                    resetPoints();
+                    updateZoomUI();
+                    applyTransform();
+                    drawImage();
+                }
+                img.src = event.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function applyTransform() {
+            canvas.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
+        }
+
+        function updateZoomUI() {
+            zoomRange.value = scale;
+            zoomValue.innerText = Math.round(scale * 100) + "%";
+        }
+
+        function drawImage() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            // Draw polygon connection
+            if (points.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                if (points.length === 4) {
+                    ctx.lineTo(points[0].x, points[0].y); // Close path
+                    ctx.fillStyle = 'rgba(37, 99, 235, 0.2)';
+                    ctx.fill();
+                }
+                ctx.strokeStyle = '#2563eb';
+                ctx.lineWidth = 2 / scale;
+                ctx.stroke();
+            }
+
+            points.forEach((p, index) => {
+                ctx.fillStyle = index === 0 ? '#ef4444' : '#16a34a'; // Start point red, others green
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 6 / scale, 0, Math.PI * 2); // Velikost bodu se přizpůsobuje zoomu
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2 / scale;
+                ctx.stroke();
+
+                ctx.font = `bold ${14 / scale}px sans-serif`;
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3 / scale;
+                ctx.strokeText(index + 1, p.x + (10 / scale), p.y - (10 / scale));
+                ctx.fillText(index + 1, p.x + (10 / scale), p.y - (10 / scale));
+            });
+        }
+
+        function handleCanvasClick(e) {
+            if (!img.src || points.length >= 4) return;
+
+            // Získání souřadnic kliknutí přímo na canvasu (ignoruje CSS transform)
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.round((e.clientX - rect.left) / scale);
+            const y = Math.round((e.clientY - rect.top) / scale);
+
+            points.push({ x, y });
+            redoStack = [];
+            drawImage();
+            updateUI();
+        }
+
+        function updateUI() {
+            resetBtn.classList.remove('hidden');
+
+            undoBtn.disabled = points.length === 0;
+            redoBtn.disabled = redoStack.length === 0;
+
+            if (points.length < 4) {
+                instructionText.innerText = `Klikni na: ${POINT_LABELS[points.length]}`;
+                resultsDiv.classList.add('hidden');
+            } else {
+                instructionText.innerText = "Hotovo. Zkopíruj kód níže.";
+                resultsDiv.classList.remove('hidden');
+
+                // Generuj Python kód
+                const coords = points.map(p => `(${p.x}, ${p.y})`).join(', ');
+                const pyCode = `"corners": [${coords}]`;
+                coordOutput.value = pyCode;
+            }
+        }
+
+        function resetPoints() {
+            points = [];
+            redoStack = [];
+            drawImage();
+            resultsDiv.classList.add('hidden');
+            updateUI();
+            coordOutput.value = "";
+            if (img.src) {
+                instructionText.innerText = "Klikni na levý horní roh (TL).";
+            }
+            resetBtn.classList.add('hidden');
+        }
+
+        resetBtn.addEventListener('click', resetPoints);
+
+        saveBtn.addEventListener('click', async () => {
+            const filename = filenameInput.value.trim();
+            if (!filename) {
+                statusMsg.innerText = "❌ Chybí název souboru!";
+                statusMsg.className = "text-xs text-center font-medium text-red-600";
+                return;
+            }
+            if (points.length !== 4) {
+                statusMsg.innerText = "❌ Zaměř 4 body!";
+                statusMsg.className = "text-xs text-center font-medium text-red-600";
+                return;
+            }
+
+            statusMsg.innerText = "⏳ Ukládám...";
+            statusMsg.className = "text-xs text-center font-medium text-gray-600";
+
+            try {
+                // Konverze bodů na pole polí, aby to odpovídalo JSON formátu v Pythonu
+                const corners = points.map(p => [p.x, p.y]);
+
+                const response = await fetch('/save_config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename, corners })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusMsg.innerText = "✅ Uloženo!";
+                    statusMsg.className = "text-xs text-center font-medium text-green-600";
+                } else {
+                    statusMsg.innerText = `❌ Chyba: ${data.message}`;
+                    statusMsg.className = "text-xs text-center font-medium text-red-600";
+                }
+            } catch (err) {
+                console.error(err);
+                statusMsg.innerText = "❌ Chyba připojení k serveru";
+                statusMsg.className = "text-xs text-center font-medium text-red-600";
+            }
+        });
+
+        updateUI();
+    </script>
+</body>
+
+</html>
