@@ -1,0 +1,59 @@
+{
+  "bundles": [
+    {
+      "theme_name": "Návyková monstra (Behaviorální výchova)",
+      "visual_style": "Vibrant 3D Pixar-style render, soft cinematic lighting, expressive characters",
+      "prompts": [
+        "A friendly, fuzzy blue monster with large kind eyes sitting on a bathroom stool, happily brushing its teeth with a giant toothbrush, sparkling white foam, morning sunlight streaming through a window, highly detailed fur texture, 8k resolution, whimsical atmosphere.",
+        "A cute purple dragon monster sitting at a tiny wooden table, joyfully eating a bowl of bright green peas and broccoli, expressive face showing delight, soft focus background of a cozy kitchen, colorful and kid-friendly aesthetic, cinematic 3D render.",
+        "A small orange monster with multiple arms efficiently putting colorful wooden blocks into a toy chest, organized playroom background, soft shadows, warm lighting, teaching children the joy of tidying up, ultra-detailed textures.",
+        "A sleepy lime-green monster tucked into a cozy bed with a star-patterned blanket, hugging a small teddy bear, glowing nightlight in the shape of a moon, peaceful and calm bedroom atmosphere, 3D animation style, high quality.",
+        "A cheerful turquoise monster standing on a step stool, washing its hands with bubbly soap under a silver faucet, splashing water droplets captured in mid-air, bright and clean bathroom setting, educational and fun vibe, masterpiece quality."
+      ]
+    },
+    {
+      "theme_name": "Cozy Kawaii Zvířátka (Samolepky a printy)",
+      "visual_style": "Soft Japanese Kawaii aesthetic, pastel watercolor and clean ink outlines",
+      "prompts": [
+        "A chubby calico cat wearing a tiny knitted strawberry hat, sitting inside a giant ceramic teacup, steam rising in the shape of small hearts, soft pastel colors, white background, minimalist and cute, high resolution.",
+        "A small round bunny rabbit gardening in a tiny terracotta pot, holding a small wooden shovel, wearing yellow rain boots, soft watercolor texture, whimsical and cozy, isolated on white background.",
+        "A tiny red panda curled up on a fluffy cloud, reading a miniature leather-bound book, soft glowing stars in the background, dreamy pastel aesthetic, perfect for digital stickers, clean edges.",
+        "A group of three diverse forest animals (fox, hedgehog, bear) sharing a giant slice of watermelon, picnic blanket texture, bright but soft summer colors, joy and friendship theme, high-quality digital illustration.",
+        "A baby elephant floating with a bunch of colorful balloons, soft grainy texture, whimsical storybook style, pastel blue and grey tones, clean white background for easy cropping."
+      ]
+    },
+    {
+      "theme_name": "Retro Groovy 70s (Potisky na trička a hrnky)",
+      "visual_style": "Vintage 1970s psychedelic flat vector art, warm earthy tones, wavy typography style",
+      "prompts": [
+        "A smiling retro sun with sunglasses, surrounded by wavy rainbow rays in terracotta, mustard yellow, and sage green colors, grainy vintage texture, flat vector design, bold outlines, 70s aesthetic.",
+        "A collection of stylized 70s wildflowers and mushrooms growing out of a vintage roller skate, vibrant orange and teal palette, groovy atmosphere, clean vector lines, high contrast for t-shirt printing.",
+        "A 'Stay Groovy' themed illustration featuring a psychedelic butterfly with checkerboard patterns on its wings, muted retro colors, distressed vintage effect, bold balanced composition.",
+        "A retro coffee mug with steam forming a peace sign, surrounded by floating daisies and wavy geometric shapes, warm brown and cream color palette, vintage 1970s advertisement style.",
+        "A cool capybara wearing oversized 70s aviator glasses and a flower crown, sitting in a vintage teal van, flat illustration, retro aesthetic, earthy tones, high resolution."
+      ]
+    },
+    {
+      "theme_name": "Dark Academia Botanika (Digitální wall art)",
+      "visual_style": "Moody vintage botanical illustration, dark parchment background, scientific precision",
+      "prompts": [
+        "A detailed botanical study of a rare black orchid, moody lighting, dark textured paper background, elegant cursive Latin annotations, antique scientific drawing style, high detail, sophisticated aesthetic.",
+        "A collection of various forest mushrooms and ferns arranged in a dark academia composition, deep forest green and burgundy tones, soft dramatic shadows, vintage lithograph texture.",
+        "A mystical Lunar Moth with intricate wing patterns, surrounded by different moon phases and dried lavender sprigs, dark moody background, gold ink highlights, magical botanical art.",
+        "An antique-style herbarium page featuring a pressed wild rose with thorns and falling petals, aged paper texture, faded ink, nostalgic and romantic dark academia vibe.",
+        "A dramatic composition of a raven perched on a gnarled oak branch intertwined with nightshade berries, dark atmospheric background, classical oil painting strokes, museum quality."
+      ]
+    },
+    {
+      "theme_name": "Futuristické Seamless Patterns (Látky a balicí papíry)",
+      "visual_style": "Seamless repeating pattern, modern minimalist vector, trending color palettes 2026",
+      "prompts": [
+        "A seamless repeating pattern of minimalist geometric cats and yarn balls, terracotta and midnight blue color scheme, clean flat design, modern aesthetic for textile print.",
+        "A seamless pattern of abstract botanical shapes and organic blobs, soft sage green and cream tones, hand-drawn feel, elegant and calming, high resolution tileable image.",
+        "A vibrant seamless pattern for children's apparel featuring tiny space rockets, planets with rings, and smiling stars, dark navy background, bright pops of neon orange and yellow.",
+        "A sophisticated seamless pattern of art deco golden lines forming scales and fans on a deep emerald green background, luxury wallpaper style, crisp lines, repeating tile.",
+        "A playful seamless pattern of breakfast items (croissants, coffee cups, eggs) in a trendy 'line art' style, white background with primary color accents, modern kitchen aesthetic."
+      ]
+    }
+  ]
+}

@@ -13,5 +13,9 @@ pillow==10.1.0
 # Browser stealth
 selenium-stealth==1.0.6
 
+# AI and Processing
+groq==0.4.2
+numpy==1.26.2
+
 # Utilities
 python-dotenv==1.0.0
