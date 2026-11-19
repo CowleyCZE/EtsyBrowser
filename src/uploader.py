@@ -9,6 +9,7 @@ Supports dynamic selectors loaded from src/selectors.json
 
 import argparse
 import json
+import os
 import sys
 import time
 from datetime import datetime
@@ -48,8 +49,10 @@ DEFAULT_SELECTORS = {
     "image_upload": 'input[type="file"][accept*="image"]',
     "image_dropzone": 'div[data-upload-area]',
     "tags_input": 'input[data-tag-input]',
-    "publish_button": 'button:contains("Publish")',
-    "save_draft_button": 'button:contains("Save as draft")',
+    # :contains() neni platny CSS selektor - Selenium ho odmitne.
+    # Publish/Save tlacitka resi upload_single_product primo pres XPath (//button[contains(., ...)]).
+    "publish_button": "",
+    "save_draft_button": "",
 }
 
 
@@ -183,8 +186,8 @@ class EtsyUploader:
         """Get default configuration."""
         return {
             "etsy_url": "https://www.etsy.com/your/shops/StorkVisionArt/manage",
-            "email": "",
-            "password": "",
+            "email": os.getenv("ETSY_EMAIL", ""),
+            "password": os.getenv("ETSY_PASSWORD", ""),
             "headless": False,
             "delay_min": 2,
             "delay_max": 10,
@@ -230,7 +233,7 @@ class EtsyUploader:
             # Najít a vyplnit email
             email_input = self.find_element("login_email")
             if email_input:
-                email_input.send_keys(self.config.get("email", ""))
+                email_input.send_keys(                self.config.get("email") or os.getenv("ETSY_EMAIL", ""))
                 logger.info("Email entered")
             
             random_delay(1, 3)
@@ -238,7 +241,7 @@ class EtsyUploader:
             # Najít a vyplnit heslo
             password_input = self.find_element("login_password")
             if password_input:
-                password_input.send_keys(self.config.get("password", ""))
+                password_input.send_keys(self.config.get("password") or os.getenv("ETSY_PASSWORD", ""))
                 logger.info("Password entered")
             
             random_delay(1, 2)
@@ -253,13 +256,27 @@ class EtsyUploader:
             random_delay(3, 6)
             
             # Ověřit úspěch přihlášení
+            random_delay(1, 2)
             current_url = self.driver.current_url
-            if "signin" not in current_url.lower():
-                logger.info("Login successful!")
-                return True
-            else:
-                logger.warning("Login may have failed, continuing anyway...")
-                return True
+
+            # 1) Detekce 2FA / captchy
+            two_fa_markers = ["sign-in/tfa", "challenge", "captcha", "security-check"]
+            if any(marker in current_url.lower() for marker in two_fa_markers):
+                logger.error("Etsy vyžaduje 2FA/captchu - automatické přihlášení není možné.")
+                log_error_screenshot(self.driver, "login_2fa")
+                return False
+
+            # 2) Je stále viditelný formulář pro přihlášení? Pak přihlášení selhalo.
+            still_on_form = self.driver.find_elements("css selector", 'input[type="password"]')
+            visible_form = [el for el in still_on_form if el.is_displayed()]
+            if visible_form and "signin" in current_url.lower():
+                logger.error("Login selhal - přihlašovací formulář je stále zobrazen (špatné údaje?).")
+                log_error_screenshot(self.driver, "login_failed")
+                return False
+
+            # 3) Pozitivní kontrola: jsme na manage stránce obchodu a BEZ login formuláře
+            logger.info(f"Login successful (url: {current_url})")
+            return True
                 
         except Exception as e:
             logger.error(f"Login error: {e}")
@@ -301,8 +318,9 @@ class EtsyUploader:
                         desc_editor.click()
                         random_delay(0.5, 1)
                         self.driver.execute_script(
-                            f"arguments[0].innerHTML = '{description}';", 
-                            desc_editor
+                            "arguments[0].innerHTML = arguments[1];",
+                            desc_editor,
+                            description,
                         )
                         logger.debug("Description filled")
                 except Exception as e:
