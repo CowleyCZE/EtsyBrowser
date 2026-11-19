@@ -1,7 +1,8 @@
 {
+  "_credentials_note": "Email a heslo NIKDY neukladej do tohoto souboru. Pouzij .env: ETSY_EMAIL=... ETSY_PASSWORD=... (uploader je cte automaticky, config slouzi jen jako fallback).",
   "etsy_url": "https://www.etsy.com/your/shops/StorkVisionArt/manage",
-  "email": "your_email@example.com",
-  "password": "your_password",
+  "email": "",
+  "password": "",
   "headless": false,
   "delay_min": 2,
   "delay_max": 10,
