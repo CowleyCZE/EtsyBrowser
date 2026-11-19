@@ -1,6 +1,6 @@
 # EtsyBrowser - TODO List
 
-**Poslední aktualizace:** 19. listopadu 2026 (hloubková analýza repozitáře - první naplnění listu)
+**Poslední aktualizace:** 19. listopadu 2026 (fix(P0): odstraněn hardcodovaný Pollinations API klíč, commit c1f6e97)
 **Dokument pročištěn:** dokončené úkoly se při aktualizaci odstraňují (historie zůstává ve starších commitech).
 
 ---
@@ -8,10 +8,10 @@
 ## P0 - KRITICKÉ (Okamžitá oprava) #nové-chyby
 
 ### Bezpečnost
-- [ ] **Únik API klíče v kódu** #nová-chyba
+- [x] **Únik API klíče v kódu** - KÓDOVÁ ČÁST HOTOVA (commit c1f6e97) #nová-chyba
   - `automation/super_robot.py`, řádek ~76: Pollinations API klíč `sk_SbG7...` je natvrdo zapsaný ve zdrojovém kódu veřejného repozitáře.
   - Nález: `api_key = "***REMOVED***"` ve funkci `generate_image()`.
-  - Řešení: (1) OKAMŽITĚ revoke klíče u Pollinations, (2) číst klíč z `os.getenv("POLLINATIONS_API_KEY")` přes `load_dotenv()`, (3) pročistit git historii (např. `git filter-repo` nebo BFG), protože i po smazání z HEAD zůstává klíč v historii.
+  - Řešení: (1) OKAMŽITĚ revoke klíče u Pollinations - ⚠️ MUSÍ UDĚLAT UŽIVATEL mansuálně, (2) číst klíč z `os.getenv("POLLINATIONS_API_KEY")` přes `load_dotenv()` - ✅ HOTOVO (commit c1f6e97, 19.11.2026), (3) pročistit git historii (např. `git filter-repo` nebo BFG) - ⚠️ VYŽADUJE UŽIVATELE (git push --force i počáteční local replace).
 - [ ] **config.json s přihlašovacími údaji je commitovaný** #nová-chyba
   - `config.json` obsahuje pole `email`/`password` a skutečnou URL obchodu a je v gitu. Jakmile se do něj vyplní heslo, unikne.
   - Řešení: přihlašovací údaje přesunout do `.env` (`.gitignore` už má `.env*`), v `config.json` nechat jen non-secret nastavení (delays, headless, csv_file) a přidat `config.example.json`.
@@ -135,3 +135,11 @@
 ---
 
 **Soubor vytvořen:** 19. listopadu 2026 (naplněno hloubkovou analýzou repozitáře)
+
+
+---
+
+**ZÁZNAM Z BĚHU 19.11.2026 (P0.1)**
+- ✅ Kódová část hotova: `automation/super_robot.py` nyní čte `POLLINATIONS_API_KEY` z env, klíč nikde v kódu není.
+- ⚠️ ZBÝVÁ NA UŽIVATELI: (1) revoke uniklého klíče `sk_SbG7...` v Pollinations UI, (2) vytvořit `.env` s novým klíčem, (3) pročistit git historii (klič zůstává ve starších commitech!).
+- Nový blob: `automation/super_robot.py` commit c1f6e97.
