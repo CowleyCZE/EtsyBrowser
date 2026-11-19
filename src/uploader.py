@@ -12,6 +12,7 @@ import json
 import os
 import sys
 import time
+from collections import deque
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -304,10 +305,13 @@ class EtsyUploader:
             
             # Vyplnit název
             title_input = self.find_element("title_input")
-            if title_input:
-                title_input.clear()
-                title_input.send_keys(product.get("title", ""))
-                logger.debug("Title filled")
+            if not title_input:
+                logger.error("Title input nenalezen - formular Etsy se neotešel správně. Produkt přeskočen.")
+                log_error_screenshot(self.driver, f"upload_noform_{product.get('title', 'unknown')}")
+                return False
+            title_input.clear()
+            title_input.send_keys(product.get("title", ""))
+            logger.debug("Title filled")
             
             random_delay(1, 3)
             
@@ -379,16 +383,20 @@ class EtsyUploader:
             human_like_scroll(self.driver, "down", 2)
             
             # Publikovat nebo uložit jako koncept
+            published = False
+            saved_as_draft = False
             try:
                 publish_button = self.find_element("publish_button")
                 if publish_button:
                     safe_click(self.driver, publish_button)
+                    published = True
                     logger.info("Product published!")
                 else:
                     # Zkusit XPath pro tlačítko publikování
                     publish_buttons = self.driver.find_elements("xpath", "//button[contains(text(), 'Publish')]")
                     if publish_buttons:
                         safe_click(self.driver, publish_buttons[0])
+                        published = True
                         logger.info("Product published!")
                     else:
                         raise Exception("Publish button not found")
@@ -398,10 +406,18 @@ class EtsyUploader:
                     save_button = self.find_element("save_draft_button")
                     if save_button:
                         safe_click(self.driver, save_button)
+                        saved_as_draft = True
                         logger.info("Product saved as draft")
-                except:
-                    logger.warning("Could not find publish/save button")
+                except Exception as exc:
+                    logger.warning(f"Could not find publish/save-draft button: {exc}")
+
+            if not published and not saved_as_draft:
+                logger.error("Produkt nebyl publikován ani uložen jako koncept - počítám jako FAIL.")
+                log_error_screenshot(self.driver, f"upload_nopublish_{product.get('title', 'unknown')}")
+                random_delay(2, 4)
+                return False
             
+            self.last_result = "published" if published else "saved_as_draft"
             random_delay(2, 4)
             
             return True
@@ -422,6 +438,10 @@ class EtsyUploader:
         """
         try:
             abs_path = str(Path(image_path).absolute())
+            
+            if not os.path.exists(abs_path):
+                logger.error(f"Obrázek neexistuje na disku: {abs_path}")
+                return False
             
             # Zkusit najít input pro upload
             file_inputs = self.driver.find_elements("css selector", 'input[type="file"]')
@@ -546,22 +566,38 @@ class EtsyUploader:
             self.driver.quit()
             return {"success": 0, "failed": total, "total": total}
         
+        # Rate limiting: sliding window podle max_products_per_hour z configu
+        max_per_hour = int(self.config.get("max_products_per_hour", 0) or 0)
+        window = deque()  # časy upload pokusů za poslední hodinu
+
         # Nahrát každý produkt
         for i, product in enumerate(products):
             logger.info(f"Uploading product {i+1}/{total}")
-            
+
             # Rate limiting
-            if i > 0 and i % 10 == 0:
-                delay = 30
-                logger.info(f"Rate limit pause: {delay}s")
-                time.sleep(delay)
-            
+            if max_per_hour > 0:
+                now_ts = time.time()
+                while window and now_ts - window[0] >= 3600:
+                    window.popleft()
+                if len(window) >= max_per_hour:
+                    wait_s = max(5.0, 3600 - (time.time() - window[0]) + 5)
+                    logger.info(
+                        f"Rate limit: dosaženo {max_per_hour} produktů/hod, "
+                        f"čekám {wait_s:.0f}s (v okně zbývá 0, ve frontě {total - i})"
+                    )
+                    time.sleep(wait_s)
+                    now_ts = time.time()
+                    while window and now_ts - window[0] >= 3600:
+                        window.popleft()
+
             success = self.upload_single_product(product)
             
             if success:
                 self.success_count += 1
             else:
                 self.failed_count += 1
+            if max_per_hour > 0:
+                window.append(time.time())
             
             # Náhodné zpoždění mezi produkty
             delay_min = self.config.get("delay_min", 2)
