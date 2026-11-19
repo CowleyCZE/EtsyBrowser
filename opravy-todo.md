@@ -37,6 +37,14 @@
 
 ## P1 - DŮLEŽITÉ (Vysoká priorita) #nové-chyby
 
+### Regrese odhalené při verifikaci činnosti CLI agenta (b37282b)
+- [x] **ETSY_ROOT NameError v super_robot.py** - OPRAVENO (commit 7e3df94) #nová-chyba
+  - Commit 1601b4a přidal `ETSY_BROWSE_ROOT = ETSY_ROOT`, ale `ETSY_ROOT` nikde nebyl definovaný → skript padal na NameError už při importu.
+  - Řešení: `ETSY_ROOT = os.environ.get("ETSY_BROWSE_ROOT", ...)` (default ~/Pictures/Etsy).
+- [ ] **os.startfile v run_mockup_test_mode není na Linuxu** #nová-chyba
+  - `os.startfile(output_path)` je Windows-only funkce, na mac/Linux vyhodí AttributeError → test mockupu padá až po vygenerování.
+  - Řešení: platform-agnostic otevření souboru (webbrowser.open, subprocess "open"/"xdg-open").
+
 ### Chyby v logice
 - [ ] **Rate limit `max_products_per_hour` se nikdy nepoužije** #nová-chyba
   - `run_bulk_upload()` má jen pevnou pauzu 30 s každých 10 produktů. Nastavení `max_products_per_hour: 50` z `config.json` se nikde nečte.
@@ -118,7 +126,7 @@
 ## STATISTIKA
 
 - P0 (Kritické): 6
-- P1 (Důležité): 11
+- P1 (Důležité): 13 (1 vyřešena, 1 nová regression)
 - P2 (Střední): 7
 - P3 (Nízké): 5
 - P4 (Dlouhodobé): 5
