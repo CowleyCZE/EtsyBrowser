@@ -16,7 +16,7 @@ import http.server
 import socketserver
 import webbrowser
 
-# Načtení environment proměnných
+# Načtení environment proměnných (očekává POLLINATIONS_API_KEY, GROQ_API_KEY, ...)
 load_dotenv()
 
 # Import modulu Etsy
@@ -73,7 +73,12 @@ def generate_image(prompt):
     print(f"   Generování obrazu (Pollinations.ai Flux)...")
     
     # API Key (Pollinations - Flux Schnell)
-    api_key = "***REMOVED***"
+    # API konfigurace pro Pollinations (Flux)
+    # Klíč se čte z .env/proměnné prostředí - NIKDY ho nezapisuj do kódu!
+    api_key = os.getenv("POLLINATIONS_API_KEY")
+    if not api_key:
+        print("   ❌ Chybí POLLINATIONS_API_KEY v .env souboru - generování přeskočeno.")
+        return None
     
     # Construct URL for GET request
     # Format: https://gen.pollinations.ai/image/{prompt}?model=flux&width={width}&height={height}&seed={seed}
