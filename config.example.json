@@ -1,5 +1,5 @@
 {
-  "_comment": "Priklad konfigurace. Zkopiruj na config.json a uprav. Prihlasovaci udaje vzdy do .env (ETSY_EMAIL, ETSY_PASSWORD), ne sem.",
+  "_comment": "Priklad konfigurace. Zkopiruj na config.json a uprav. Prihlasovaci udaje vzdy do .env (ETSY_EMAIL, ETSY_PASSWORD), ne sem. Sekce prices je jednotny zdroj vychozich cen vsech skriptu (super_robot, uploader, migrate_products).",
   "etsy_url": "https://www.etsy.com/your/shops/YOUR_SHOP/manage",
   "email": "",
   "password": "",
@@ -7,5 +7,9 @@
   "delay_min": 2,
   "delay_max": 10,
   "max_products_per_hour": 50,
-  "csv_file": "products.csv"
+  "csv_file": "products.csv",
+  "prices": {
+    "single": 5.90,
+    "bundle": 9.90
+  }
 }

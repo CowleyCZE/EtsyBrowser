@@ -46,6 +46,21 @@ ETSY_API_KEY = os.getenv("ETSY_API_KEY")
 ETSY_SHOP_ID = os.getenv("ETSY_SHOP_ID")
 ETSY_ACCESS_TOKEN = os.getenv("ETSY_ACCESS_TOKEN")
 
+# --- CENY: jednotný zdroj pravdy (config.json -> sekce "prices") ---
+def _load_project_config() -> dict:
+    """Načte kořenový config.json (nebo data/config.json) jako jednotný zdroj nastavení."""
+    for path in [os.path.join(PROJECT_ROOT, "config.json"), os.path.join(DATA_DIR, "config.json")]:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            continue
+    return {}
+
+_PROJECT_CONFIG = _load_project_config()
+DEFAULT_PRICE_SINGLE = float(_PROJECT_CONFIG.get("prices", {}).get("single", 5.90))
+DEFAULT_PRICE_BUNDLE = float(_PROJECT_CONFIG.get("prices", {}).get("bundle", 9.90))
+
 # Nastavení cest (Reflektuje strukturu: EtsyBrowser / automation / script)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__)) 
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)        # .../EtsyBrowser/
@@ -56,6 +71,7 @@ DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 CONFIGS_DIR = DATA_DIR  # Přesměrováno na data
 TEMPLATES_JSON_PATH = os.path.join(DATA_DIR, "mockup_templates.json")
 PROMPTS_JSON_PATH = os.path.join(DATA_DIR, "prompts.json")
+SKU_REGISTRY_PATH = os.path.join(DATA_DIR, "sku_registry.json")  # perzistentní SKU čítač
 
 # 00_Input_Queue - Vstupní fronta
 INPUT_QUEUE_DIR = os.path.join(PROJECT_ROOT, "automation", "00_Input_Queue") # Cesta uvnitř automation pro bot-specific data
@@ -140,24 +156,45 @@ def generate_sku(product_type: str = "S") -> str:
     """
     today = datetime.now().strftime("%y%m%d")
     prefix = f"SP-{today}-"
-    
-    # Najdi nejvyšší SEQ pro dnešní den v obou složkách
-    max_seq = 0
+
+    # Perzistentní registr SKU - chrání proti kolizím po archivaci a při
+    # paralelních bězích (SEQ se neztratí, i když složky zmizí do 03_Archive)
+    registry = {}
+    try:
+        if os.path.exists(SKU_REGISTRY_PATH):
+            with open(SKU_REGISTRY_PATH, "r", encoding="utf-8") as f:
+                registry = json.load(f)
+    except (OSError, ValueError) as e:
+        print(f"   ⚠️ SKU registr nelze načíst ({e}), pokračuji skenem složek.")
+
+    max_seq = int(registry.get(today, {}).get(product_type, 0))
+
+    # Najdi nejvyšší SEQ pro dnešní den v obou složkách (sken jako pojistka)
     for wdir in [SINGLES_DIR, BUNDLES_DIR]:
         if os.path.exists(wdir):
             for folder in os.listdir(wdir):
                 if folder.startswith(prefix):
                     try:
                         parts = folder.split("-")
-                        if len(parts) >= 4:
-                            seq_part = parts[2].split("_")[0]  # Handle SP-260208-01-S_Name
-                            seq = int(seq_part)
+                        if len(parts) >= 4 and parts[3].startswith(product_type):
+                            seq = int(parts[2].split("_")[0])  # Handle SP-260208-01-S_Name
                             max_seq = max(max_seq, seq)
                     except (ValueError, IndexError):
                         pass
-    
-    new_seq = str(max_seq + 1).zfill(2)
-    return f"SP-{today}-{new_seq}-{product_type}"
+
+    new_seq = max_seq + 1
+
+    # Uložit do registru pro příští běh
+    registry.setdefault(today, {})[product_type] = new_seq
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(SKU_REGISTRY_PATH, "w", encoding="utf-8") as f:
+            json.dump(registry, f, indent=2)
+    except OSError as e:
+        print(f"   ⚠️ SKU registr nelze uložit: {e}")
+
+    new_seq_str = str(new_seq).zfill(2)
+    return f"SP-{today}-{new_seq_str}-{product_type}"
 
 
 def create_product_folder(sku: str, keyword: str) -> str:
@@ -190,8 +227,10 @@ def create_product_folder(sku: str, keyword: str) -> str:
     return folder_path
 
 
-def create_listing_data(sku: str, title: str, tags: list, price: float = 5.90) -> dict:
+def create_listing_data(sku: str, title: str, tags: list, price: float = None) -> dict:
     """Vytvoří metadata pro listing dle pravidla.md formátu"""
+    if price is None:
+        price = DEFAULT_PRICE_BUNDLE if sku.endswith("-B") else DEFAULT_PRICE_SINGLE
     return {
         "sku": sku,
         "title": title,
@@ -480,6 +519,11 @@ def create_mockup_from_templates_dir(art, output_path):
         return False
 
 def generate_seo_text(client, trend_data, output_folder):
+    """Vygeneruje SEO texty (title/description/tags) a uloží BUNDLE_INFO.txt.
+
+    Returns:
+        Seznam SEO tagů nebo None při selhání.
+    """
     print("📝 Generování SEO textů...")
     prompt = f"""Write Etsy Listing Info for: {trend_data['bundle_theme']}\nOutput Structure:\nTITLE: (SEO friendly)\nDESCRIPTION: (Sales copy)\nTAGS: (13 tags comma separated)\n"""
     try:
@@ -487,10 +531,33 @@ def generate_seo_text(client, trend_data, output_folder):
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.3-70b-versatile"
         )
+        content = completion.choices[0].message.content
         with open(os.path.join(output_folder, "BUNDLE_INFO.txt"), "w", encoding="utf-8") as f:
-            f.write(completion.choices[0].message.content)
-    except:
-        pass
+            f.write(content)
+        tags = parse_seo_tags(content)
+        if tags:
+            return tags
+        return None
+    except Exception as e:
+        print(f"   ⚠️ SEO generování jako celek selhalo: {e}")
+        return None
+
+
+def parse_seo_tags(content: str) -> list:
+    """Vytáhne TAGS řádek z výstupu LLM a vrátí max. 13 tagů o max. 20 znacích."""
+    if not content:
+        return []
+    match = re.search(r'TAGS?:\s*(.+)', content, re.IGNORECASE)
+    if not match:
+        return []
+    tags = []
+    for raw in match.group(1).split(','):
+        tag = raw.strip().strip('.,;"\'').strip()
+        if tag:
+            tags.append(tag[:20])  # Etsy limit je 20 znaků na tag
+        if len(tags) >= 13:
+            break
+    return tags
 
 # --- NOVÁ FUNKCE: BROWSE A MOCKUP ---
 
@@ -804,7 +871,7 @@ def publish_to_etsy(product_dir):
         "quantity": 999,
         "title": data.get("title"),
         "description": data.get("description_generated") or "Digital Printable Wall Art",
-        "price": data.get("pricing", {}).get("amount", 5.90),
+        "price": data.get("pricing", {}).get("amount", DEFAULT_PRICE_SINGLE),
         "who_made": WhoMade.I_DID.value,
         "when_made": WhenMade.YEARS_2020_2026.value,
         "taxonomy_id": 159,  # Digital Prints
@@ -896,14 +963,13 @@ def run_generation_mode():
 
     # 5. SEO a metadata do 03_Metadata
     metadata_dir = os.path.join(bundle_dir, "03_Metadata")
-    generate_seo_text(client, trend, metadata_dir)
-    
-    # Vytvořit listing_data.json
+    # Vytvořit listing_data.json (tagy z SEO výstupu, fallback když LLM selhalo)
+    seo_tags = generate_seo_text(client, trend, metadata_dir) or ["wall art", "printable", "digital download"]
     listing_data = create_listing_data(
         sku=sku,
         title=f"{trend['bundle_theme']} Wall Art Bundle - Set of 5 Printable Art",
-        tags=trend.get('visual_style', '').split(', ')[:13],
-        price=9.90
+        tags=seo_tags,
+        price=DEFAULT_PRICE_BUNDLE
     )
     with open(os.path.join(metadata_dir, "listing_data.json"), "w", encoding="utf-8") as f:
         json.dump(listing_data, f, indent=2, ensure_ascii=False)
@@ -978,7 +1044,7 @@ def run_solo_mode():
                     sku=sku,
                     title=f"{safe_name} Wall Art - Digital Download Printable",
                     tags=["wall art", "printable", "digital download"],
-                    price=5.90
+                    price=DEFAULT_PRICE_SINGLE
                 )
                 with open(os.path.join(metadata_dir, "listing_data.json"), "w", encoding="utf-8") as f:
                     json.dump(listing_data, f, indent=2, ensure_ascii=False)
@@ -1211,17 +1277,18 @@ def run_list_mode():
                     metadata_dir = os.path.join(bundle_dir, "03_Metadata")
                     
                     # SEO text (pokud je klient k dispozici, jinak skip)
+                    seo_tags = None
                     try:
                         client = Groq(api_key=GROQ_API_KEY)
-                        generate_seo_text(client, {"bundle_theme": theme, "visual_style": style}, metadata_dir)
+                        seo_tags = generate_seo_text(client, {"bundle_theme": theme, "visual_style": style}, metadata_dir)
                     except:
                         print("   ⚠️ SEO generování přeskočeno (chyba API/Client)")
 
                     listing_data = create_listing_data(
                         sku=sku,
                         title=f"{theme} Wall Art Bundle - Set of {len(prompts)} Printable Art",
-                        tags=style.split(', ')[:13],
-                        price=9.90
+                        tags=seo_tags or ["wall art", "printable", "digital download"],
+                        price=DEFAULT_PRICE_BUNDLE
                     )
                     with open(os.path.join(metadata_dir, "listing_data.json"), "w", encoding="utf-8") as f:
                         json.dump(listing_data, f, indent=2, ensure_ascii=False)

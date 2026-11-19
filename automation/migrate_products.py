@@ -10,7 +10,22 @@ import re
 from datetime import datetime
 
 # Cesty
-ETSY_ROOT = r"c:\Users\cowle\Pictures\Etsy"
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.dirname(_SCRIPT_DIR)
+
+def _load_project_config():
+    """Načte kořenový config.json jako jednotný zdroj cen (sekce prices)."""
+    try:
+        with open(os.path.join(_PROJECT_ROOT, "config.json"), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+_PROJECT_CONFIG = _load_project_config()
+DEFAULT_PRICE_SINGLE = float(_PROJECT_CONFIG.get("prices", {}).get("single", 5.90))
+DEFAULT_PRICE_BUNDLE = float(_PROJECT_CONFIG.get("prices", {}).get("bundle", 9.90))
+
+ETSY_ROOT = os.environ.get("ETSY_BROWSE_ROOT", r"c:\Users\cowle\Pictures\Etsy")
 OLD_DIR = os.path.join(ETSY_ROOT, "01_Hotove_Produkty")
 SINGLES_DIR = os.path.join(ETSY_ROOT, "02_Warehouse", "Singles")
 BUNDLES_DIR = os.path.join(ETSY_ROOT, "02_Warehouse", "Bundles")
@@ -31,7 +46,7 @@ def create_listing_data(sku, title, tags):
         "title": title,
         "description_generated": "",
         "seo_tags": tags,
-        "pricing": {"currency": "USD", "amount": 5.90 if sku.endswith("-S") else 9.90},
+        "pricing": {"currency": "USD", "amount": DEFAULT_PRICE_SINGLE if sku.endswith("-S") else DEFAULT_PRICE_BUNDLE},
         "file_paths": {}
     }
 
@@ -181,3 +196,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

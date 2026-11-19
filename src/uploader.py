@@ -334,8 +334,8 @@ class EtsyUploader:
             
             random_delay(1, 3)
             
-            # Vyplnit cenu
-            price = product.get("price", "9.99")
+            # Vyplnit cenu (fallback: config.json -> prices.single, jinak jednotný default 5.90)
+            price = product.get("price") or self.config.get("prices", {}).get("single", 5.90)
             price_input = self.find_element("price_input")
             if price_input:
                 price_input.clear()
@@ -720,3 +720,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
