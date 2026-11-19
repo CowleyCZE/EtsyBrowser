@@ -8,10 +8,13 @@
 ## P0 - KRITICKÉ (Okamžitá oprava) #nové-chyby
 
 ### Bezpečnost
-- [x] **Únik API klíče v kódu** - KÓDOVÁ ČÁST HOTOVA (commit c1f6e97) #nová-chyba
-  - `automation/super_robot.py`, řádek ~76: Pollinations API klíč `sk_SbG7...` je natvrdo zapsaný ve zdrojovém kódu veřejného repozitáře.
-  - Nález: `api_key = "***REMOVED***"` ve funkci `generate_image()`.
-  - Řešení: (1) OKAMŽITĚ revoke klíče u Pollinations - ⚠️ MUSÍ UDĚLAT UŽIVATEL mansuálně, (2) číst klíč z `os.getenv("POLLINATIONS_API_KEY")` přes `load_dotenv()` - ✅ HOTOVO (commit c1f6e97, 19.11.2026), (3) pročistit git historii (např. `git filter-repo` nebo BFG) - ⚠️ VYŽADUJE UŽIVATELE (git push --force i počáteční local replace).
+- [x] **Únik API klíče v kódu** - KÓDOVÁ ČÁST HOTOVA (commit c1f6e97 + 1601b4a pro debug skript, lokální .env vytvořen) #nová-chyba
+  - `automation/super_robot.py` a `automation/debug_pollinations.py`: Pollinations API klíč `sk_SbG7...` odstraněn z veškerého HEAD kódu.
+  - Vytvořen lokální `.env` dle vzoru `.env.example`.
+  - Příprava pro `git-filter-repo` otestována.
+  - ⚠️ ČEKÁ NA UŽIVATELE:
+    1. Revokovat starý klíč `***REMOVED***` v Pollinations UI a do lokálního `.env` doplnit nový funkční klíč.
+    2. Udělit souhlas s přepsáním git historie na vzdáleném repozitáři (`git push --force`) pro smazání klíče ze starších commitů.
 - [x] **config.json s přihlašovacími údaji je commitovaný** - HOTOVO (email/password přesunuty do .env; přidán config.example.json a .env.example) #nová-chyba
   - `config.json` obsahuje pole `email`/`password` a skutečnou URL obchodu a je v gitu. Jakmile se do něj vyplní heslo, unikne.
   - Řešení: přihlašovací údaje přesunout do `.env` (`.gitignore` už má `.env*`), v `config.json` nechat jen non-secret nastavení (delays, headless, csv_file) a přidat `config.example.json`.
@@ -19,17 +22,17 @@
 ### Chyby v kódu
 - [x] **Login "uspěje" i když selhal** - HOTOVO (login() nyní detekuje 2FA/captchu a viditelný login formulář, vrací False) #nová-chyba
   - `src/uploader.py` `login()`: při neúspěchu se jen zaloguje warning a vrátí se `True` ("continuing anyway"). Bulk upload pak jede neautentizovaný a každý produkt zbytečně "selže".
-  - Řešení: verifikovat úspěch proti reálnému stavu (přítomnost elementu manage st
-ánky / absence login formuláře), při selhání vrátit `False` a ukončit běh s jasnou chybou. Navíc se nekontroluje přesměrování na 2FA/captcha.
+  - Řešení: verifikovat úspěch proti reálnému stavu (přítomnost elementu manage stránky / absence login formuláře), při selhání vrátit `False` a ukončit běh s jasnou chybou. Navíc se nekontroluje přesměrování na 2FA/captcha.
 - [x] **Nevalidní CSS selektor `:contains()`** - HOTOVO (odstraněny z DEFAULT_SELECTORS, publish/resi XPath fallback) #nová-chyba
   - `src/uploader.py` `DEFAULT_SELECTORS`: `publish_button` a `save_draft_button` používají `'button:contains("Publish")'` / `'button:contains("Save as draft")'`. `:contains` není platný CSS selektor, Selenium vyhodí `InvalidSelectorException`, takže tyto fallbacky nikdy nemohou fungovat.
   - Řešení: použít XPath (`//button[contains(., "Publish")]`), ideálně se selektory zaznamenanými Selector Recorderem.
 - [x] **Description vkládaná přes f-string do `innerHTML`** - HOTOVO (bezpečné argumenty místo f-stringu) #nová-chyba
   - `src/uploader.py` `upload_single_product()`: `execute_script(f"arguments[0].innerHTML = '{description}';")`. Popis s apostrofem (v češtině běžný) rozbije JS, zároveň je to vektor skript injection.
   - Řešení: `self.driver.execute_script("arguments[0].innerHTML = arguments[1];", desc_editor, description)`.
-- [ ] **Nevalidní enumy pro Etsy v3 API** #nová-chyba
-  - `automation/super_robot.py` `publish_to_etsy()`: `when_made: "2020_2024"` - ověřit aktuální platné hodnoty enumu v dokumentaci Etsy Open API v3. Zároveň `fill_csv.py` má `DEFAULT_VALUES["who_made"] = "AI_GENERATED"` - taková hodnota v Etsy CSV neexistuje (AI obsah se deklaruje jinak).
-  - Řešení: ověřit hodnoty v dokumentaci Etsy API v3 a sjednotit obě upload cesty do jednoho společného modulu.
+- [x] **Nevalidní enumy pro Etsy v3 API** - HOTOVO (commit 1601b4a) #nová-chyba
+  - Vytvořen centrální modul `src/etsy_enums.py` se všemi oficiálními enumy Etsy OpenAPI v3 (`WhoMade`, `WhenMade`, `ListingType`, `ListingState`, `AI_DISCLOSURE_TEXT`).
+  - `automation/super_robot.py`: opraveno `when_made: "2020_2026"`, `who_made: "i_did"`, přidán `type: "download"`.
+  - `src/fill_csv.py`: opraveno `DEFAULT_VALUES["who_made"] = "i_did"` (místo neplatného "AI_GENERATED"), synchronizováno s enumem. Dle Etsy zásad se AI obsah deklaruje jako "i_did" + disclosure v textu popisu listingu.
 
 ---
 
