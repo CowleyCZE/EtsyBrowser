@@ -5,6 +5,8 @@ import requests
 import urllib.parse
 import json
 import re
+import subprocess
+import sys
 from groq import Groq
 from PIL import Image, ImageOps, ImageFilter
 from datetime import datetime
@@ -994,6 +996,20 @@ def run_solo_mode():
 
     print(f"\n✨ Vše hotovo! Produkty jsou v: {SINGLES_DIR}")
 
+def _open_file_crossplatform(path: str) -> None:
+    """Otevře soubor v defaultní aplikaci na Win/mac/Linux (nahrazuje Windows-only os.startfile)."""
+    try:
+        if sys.platform == "win32":
+            os.startfile(path)
+        elif sys.platform == "darwin":
+            subprocess.Popen(["open", path])
+        else:
+            subprocess.Popen(["xdg-open", path])
+        print(f"   👁️  Otevřeno pro kontrolu: {path}")
+    except Exception as e:
+        print(f"   ⚠️  Nepodařilo se otevřít {path}: {e}")
+
+
 def run_mockup_test_mode():
     print(f"\n🧪 SPUŠTĚNÍ TESTOVÁNÍ MOCKUPŮ")
     
@@ -1102,8 +1118,8 @@ def run_mockup_test_mode():
         bg.convert("RGB").save(output_path, quality=95)
         print(f"✅ Hotovo! Uloženo jako: {output_path}")
         
-        # Otevření pro kontrolu
-        os.startfile(output_path)
+        # Otevření pro kontrolu (multiplatformní)
+        _open_file_crossplatform(output_path)
         
     except Exception as e:
         print(f"❌ Chyba: {e}")
