@@ -1,6 +1,6 @@
 # EtsyBrowser - TODO List
 
-**Poslední aktualizace:** 19. listopadu 2026 (fix(P1): rate-success-startfile hotovo, commity 6cc00d74 a caaa64c0)
+**Poslední aktualizace:** 19. listopadu 2026 (fix(P1): ceny + SEO tagy bundlů + SKU registr, commit 869bf8c4)
 **Dokument pročištěn:** dokončené úkoly se při aktualizaci odstraňují (historie zůstává ve starších commitech).
 
 ---
@@ -54,13 +54,9 @@
   - Řešení: rozlišit výsledky (published / saved_as_draft / failed_with_reason) a po publish ověřit, že listing opravdu vznikl (redirect na listing URL nebo API check).
 - [x] **Chybí validace existence obrázků na disku** - HOTOVO (commit 6cc00d74, os.path.exists před send_keys) #nová-chyba
   - Před `file_input.send_keys(abs_path)` v `upload_image()` se nekontroluje `os.path.exists(abs_path)`. Neexistující cesta vede na kryptickou Selenium chybu.
-- [ ] **Defaultní ceny hardcodované na více místech a nekonzistentní** #nová-chyba
-  - `uploader.py`: `"9.99"`; `super_robot.py`: `5.90` (single) / `9.90` (bundle); `migrate_products.py` totéž copy-paste. Řešení: jednotný zdroj pravdy (config / listing_data).
-- [ ] **Tagy pro bundle se generují z `visual_style` místo z SEO tagů** #nová-chyba
-  - `run_generation_mode()`: `tags=trend.get('visual_style', '').split(', ')[:13]` - tagy jsou větný popis stylu, nikoliv krátké Etsy tagy (max 20 znaků na tag). Tagy z `generate_seo_text()` se do `listing_data.json` vůbec nedostanou.
-- [ ] **`generate_sku()` nechrání proti kolizím** #nová-chyba
-  - Číslování se odvodí z obsahu `SINGLES_DIR`/`BUNDLES_DIR`; po archivaci (03_Archive) se kolize mohou opakovat a dva paralelní běhy si vygenerují stejné SKU.
-  - Řešení: perzistentní counter (JSON v datovém adresáři) nebo timestamp se sekundami.
+- [x] **Defaultní ceny hardcodované na více místech a nekonzistentní** - HOTOVO (jednotný zdroj pravdy v config.json sekce `prices.single` / `prices.bundle`, čteno v super_robot.py, uploader.py i migrate_products.py; config.example.json doplněn)
+- [x] **Tagy pro bundle se generují z `visual_style` místo z SEO tagů** - HOTOVO (generate_seo_text vrací tagy z LLM výstupu, parse_seo_tags ořezává na 13×20 znaků, fallback tagy při selhání)
+- [x] **`generate_sku()` nechrání proti kolizím** - HOTOVO (perzistentní registr data/sku_registry.json per den+typ, sken Warehouse složek zůstává jako pojistka)
 
 ### Chyby v kódu
 - [ ] **Vyčistit bare `except:` v celém projektu** #nová-chyba
