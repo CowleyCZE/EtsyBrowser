@@ -233,7 +233,9 @@ class EtsyUploader:
             # Najít a vyplnit email
             email_input = self.find_element("login_email")
             if email_input:
-                email_input.send_keys(                self.config.get("email") or os.getenv("ETSY_EMAIL", ""))
+                email_input.send_keys(
+                    self.config.get("email") or os.getenv("ETSY_EMAIL", "")
+                )
                 logger.info("Email entered")
             
             random_delay(1, 3)
