@@ -1,6 +1,6 @@
 # EtsyBrowser - TODO List
 
-**Poslední aktualizace:** 19. listopadu 2026 (fix(P0): P0.1-P0.5 hotovo, commity c1f6e97 a b3c414e)
+**Poslední aktualizace:** 19. listopadu 2026 (fix(P1): rate-success-startfile hotovo, commity 6cc00d74 a caaa64c0)
 **Dokument pročištěn:** dokončené úkoly se při aktualizaci odstraňují (historie zůstává ve starších commitech).
 
 ---
@@ -41,18 +41,18 @@
 - [x] **ETSY_ROOT NameError v super_robot.py** - OPRAVENO (commit 7e3df94) #nová-chyba
   - Commit 1601b4a přidal `ETSY_BROWSE_ROOT = ETSY_ROOT`, ale `ETSY_ROOT` nikde nebyl definovaný → skript padal na NameError už při importu.
   - Řešení: `ETSY_ROOT = os.environ.get("ETSY_BROWSE_ROOT", ...)` (default ~/Pictures/Etsy).
-- [ ] **os.startfile v run_mockup_test_mode není na Linuxu** #nová-chyba
+- [x] **os.startfile v run_mockup_test_mode není na Linuxu** - HOTOVO (commit caaa64c0, helper _open_file_crossplatform Win/mac/Linux) #nová-chyba
   - `os.startfile(output_path)` je Windows-only funkce, na mac/Linux vyhodí AttributeError → test mockupu padá až po vygenerování.
   - Řešení: platform-agnostic otevření souboru (webbrowser.open, subprocess "open"/"xdg-open").
 
 ### Chyby v logice
-- [ ] **Rate limit `max_products_per_hour` se nikdy nepoužije** #nová-chyba
+- [x] **Rate limit `max_products_per_hour` se nikdy nepoužije** - HOTOVO (commit 6cc00d74, sliding-window limiter dle configu s logováním) #nová-chyba
   - `run_bulk_upload()` má jen pevnou pauzu 30 s každých 10 produktů. Nastavení `max_products_per_hour: 50` z `config.json` se nikde nečte.
   - Řešení: skutečný sliding-window limiter podle configu, logovat kolik produktů zbývá v aktuálním okně.
-- [ ] **Detekce úspěchu uploadu je nevěrohodná** #nová-chyba
+- [x] **Detekce úspěchu uploadu je nevěrohodná** - HOTOVO (commit 6cc00d74; chybějící title input => FAIL; žádný publish ani draft => FAIL; self.last_result = published/saved_as_draft) #nová-chyba
   - `upload_single_product()` vrací `True`, i když se nevyplnil title (prázdný selektor), nenahrají obrázky ani neprobehne publish ani save-draft. Statistika `success/failed` je tak zkreslená.
   - Řešení: rozlišit výsledky (published / saved_as_draft / failed_with_reason) a po publish ověřit, že listing opravdu vznikl (redirect na listing URL nebo API check).
-- [ ] **Chybí validace existence obrázků na disku** #nová-chyba
+- [x] **Chybí validace existence obrázků na disku** - HOTOVO (commit 6cc00d74, os.path.exists před send_keys) #nová-chyba
   - Před `file_input.send_keys(abs_path)` v `upload_image()` se nekontroluje `os.path.exists(abs_path)`. Neexistující cesta vede na kryptickou Selenium chybu.
 - [ ] **Defaultní ceny hardcodované na více místech a nekonzistentní** #nová-chyba
   - `uploader.py`: `"9.99"`; `super_robot.py`: `5.90` (single) / `9.90` (bundle); `migrate_products.py` totéž copy-paste. Řešení: jednotný zdroj pravdy (config / listing_data).
