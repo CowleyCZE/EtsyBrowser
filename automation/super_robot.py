@@ -19,11 +19,21 @@ import webbrowser
 # Načtení environment proměnných (očekává POLLINATIONS_API_KEY, GROQ_API_KEY, ...)
 load_dotenv()
 
-# Import modulu Etsy
+# Import modulu Etsy a enumu
 try:
     from etsy_api import EtsyClient
 except ImportError:
-    EtsyClient = None
+    try:
+        from automation.etsy_api import EtsyClient
+    except ImportError:
+        EtsyClient = None
+
+try:
+    from src.etsy_enums import WhoMade, WhenMade, ListingType
+except ImportError:
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from src.etsy_enums import WhoMade, WhenMade, ListingType
 
 # --- 1. KONFIGURACE ---
 GROQ_API_KEY = os.getenv("GROQ_API_KEY") 
@@ -792,10 +802,11 @@ def publish_to_etsy(product_dir):
         "title": data.get("title"),
         "description": data.get("description_generated") or "Digital Printable Wall Art",
         "price": data.get("pricing", {}).get("amount", 5.90),
-        "who_made": "i_did",
-        "when_made": "2020_2024",
+        "who_made": WhoMade.I_DID.value,
+        "when_made": WhenMade.YEARS_2020_2026.value,
         "taxonomy_id": 159,  # Digital Prints
         "is_digital": "true",
+        "type": ListingType.DOWNLOAD.value,
         "tags": ",".join(data.get("seo_tags", []))[:255] # Max 13 tagů, ale API bere string
     }
 

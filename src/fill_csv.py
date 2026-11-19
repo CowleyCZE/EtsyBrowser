@@ -4,6 +4,7 @@ import argparse
 import csv
 from pathlib import Path
 
+from src.etsy_enums import WhoMade, WhenMade, ListingType, ListingState
 from src.logger import setup_logger
 
 logger = setup_logger("fill_csv")
@@ -30,8 +31,8 @@ ETSY_FIELDS = {
 
 DEFAULT_VALUES = {
     "quantity": 999,
-    "state": "active",
-    "who_made": "AI_GENERATED",
+    "state": ListingState.ACTIVE.value,
+    "who_made": WhoMade.I_DID.value,
     "is_customizable": "false",
     "is_digital": "true",
     "processing_min": 1,

@@ -1,7 +1,14 @@
+import os
 import requests
 import time
+from dotenv import load_dotenv
 
-api_key = "***REMOVED***"
+load_dotenv()
+
+api_key = os.getenv("POLLINATIONS_API_KEY")
+if not api_key:
+    raise ValueError("POLLINATIONS_API_KEY není nastaven v .env ani proměnných prostředí.")
+
 prompt = "A futuristic stork robot delivering a package, detailed, 8k, flux style"
 url = f"https://gen.pollinations.ai/image/{prompt}"
 
