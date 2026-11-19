@@ -8,13 +8,12 @@
 ## P0 - KRITICKÉ (Okamžitá oprava) #nové-chyby
 
 ### Bezpečnost
-- [x] **Únik API klíče v kódu** - KÓDOVÁ ČÁST HOTOVA (commit c1f6e97 + 1601b4a pro debug skript, lokální .env vytvořen) #nová-chyba
-  - `automation/super_robot.py` a `automation/debug_pollinations.py`: Pollinations API klíč `sk_SbG7...` odstraněn z veškerého HEAD kódu.
+- [x] **Únik API klíče v kódu** - KOMPLETNĚ HOTOVO (commit c1f6e97 + 1601b4a, historie vyčištěna git-filter-repo, force push proveden) #nová-chyba
+  - `automation/super_robot.py` a `automation/debug_pollinations.py`: Pollinations API klíč `sk_SbG7...` odstraněn ze všech skriptů.
   - Vytvořen lokální `.env` dle vzoru `.env.example`.
-  - Příprava pro `git-filter-repo` otestována.
-  - ⚠️ ČEKÁ NA UŽIVATELE:
-    1. Revokovat starý klíč `***REMOVED***` v Pollinations UI a do lokálního `.env` doplnit nový funkční klíč.
-    2. Udělit souhlas s přepsáním git historie na vzdáleném repozitáři (`git push --force`) pro smazání klíče ze starších commitů.
+  - Git historie byla kompletně přepsána nástrojem `git-filter-repo`, klíč byl nahrazen `***REMOVED***` a nová historie byla se souhlasem uživatele nahrána na GitHub (`git push --force origin main`).
+  - Ověřeno čerstvým klonem z GitHubu – klíč se již v historii ani v kódu nevyskytuje.
+  - ⚠️ Doporučení: uživatel provede v UI Pollinations revokaci původního tokenu.
 - [x] **config.json s přihlašovacími údaji je commitovaný** - HOTOVO (email/password přesunuty do .env; přidán config.example.json a .env.example) #nová-chyba
   - `config.json` obsahuje pole `email`/`password` a skutečnou URL obchodu a je v gitu. Jakmile se do něj vyplní heslo, unikne.
   - Řešení: přihlašovací údaje přesunout do `.env` (`.gitignore` už má `.env*`), v `config.json` nechat jen non-secret nastavení (delays, headless, csv_file) a přidat `config.example.json`.
