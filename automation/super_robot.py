@@ -212,6 +212,7 @@ TEMPLATES_JSON_PATH = os.path.join(SCRIPT_DIR, "mockup_templates.json")
 SOLO_INPUT_DIR = TO_EDIT_DIR  # Přesměrováno na novou lokaci
 
 # 4. Cesty pro browsing mockupů
+ETSY_ROOT = os.environ.get("ETSY_BROWSE_ROOT", os.path.join(os.path.expanduser("~"), "Pictures", "Etsy"))
 ETSY_BROWSE_ROOT = ETSY_ROOT
 MOCKUP_TEMPLATES_DIR = os.path.join(SCRIPT_DIR, "1_Mockup_Sablony")
 
