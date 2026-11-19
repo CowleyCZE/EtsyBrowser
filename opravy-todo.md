@@ -1,6 +1,6 @@
 # EtsyBrowser - TODO List
 
-**Poslední aktualizace:** 19. listopadu 2026 (fix(P0): odstraněn hardcodovaný Pollinations API klíč, commit c1f6e97)
+**Poslední aktualizace:** 19. listopadu 2026 (fix(P0): P0.1-P0.5 hotovo, commity c1f6e97 a b3c414e)
 **Dokument pročištěn:** dokončené úkoly se při aktualizaci odstraňují (historie zůstává ve starších commitech).
 
 ---
@@ -12,19 +12,19 @@
   - `automation/super_robot.py`, řádek ~76: Pollinations API klíč `sk_SbG7...` je natvrdo zapsaný ve zdrojovém kódu veřejného repozitáře.
   - Nález: `api_key = "***REMOVED***"` ve funkci `generate_image()`.
   - Řešení: (1) OKAMŽITĚ revoke klíče u Pollinations - ⚠️ MUSÍ UDĚLAT UŽIVATEL mansuálně, (2) číst klíč z `os.getenv("POLLINATIONS_API_KEY")` přes `load_dotenv()` - ✅ HOTOVO (commit c1f6e97, 19.11.2026), (3) pročistit git historii (např. `git filter-repo` nebo BFG) - ⚠️ VYŽADUJE UŽIVATELE (git push --force i počáteční local replace).
-- [ ] **config.json s přihlašovacími údaji je commitovaný** #nová-chyba
+- [x] **config.json s přihlašovacími údaji je commitovaný** - HOTOVO (email/password přesunuty do .env; přidán config.example.json a .env.example) #nová-chyba
   - `config.json` obsahuje pole `email`/`password` a skutečnou URL obchodu a je v gitu. Jakmile se do něj vyplní heslo, unikne.
   - Řešení: přihlašovací údaje přesunout do `.env` (`.gitignore` už má `.env*`), v `config.json` nechat jen non-secret nastavení (delays, headless, csv_file) a přidat `config.example.json`.
 
 ### Chyby v kódu
-- [ ] **Login "uspěje" i když selhal** #nová-chyba
+- [x] **Login "uspěje" i když selhal** - HOTOVO (login() nyní detekuje 2FA/captchu a viditelný login formulář, vrací False) #nová-chyba
   - `src/uploader.py` `login()`: při neúspěchu se jen zaloguje warning a vrátí se `True` ("continuing anyway"). Bulk upload pak jede neautentizovaný a každý produkt zbytečně "selže".
   - Řešení: verifikovat úspěch proti reálnému stavu (přítomnost elementu manage st
 ánky / absence login formuláře), při selhání vrátit `False` a ukončit běh s jasnou chybou. Navíc se nekontroluje přesměrování na 2FA/captcha.
-- [ ] **Nevalidní CSS selektor `:contains()`** #nová-chyba
+- [x] **Nevalidní CSS selektor `:contains()`** - HOTOVO (odstraněny z DEFAULT_SELECTORS, publish/resi XPath fallback) #nová-chyba
   - `src/uploader.py` `DEFAULT_SELECTORS`: `publish_button` a `save_draft_button` používají `'button:contains("Publish")'` / `'button:contains("Save as draft")'`. `:contains` není platný CSS selektor, Selenium vyhodí `InvalidSelectorException`, takže tyto fallbacky nikdy nemohou fungovat.
   - Řešení: použít XPath (`//button[contains(., "Publish")]`), ideálně se selektory zaznamenanými Selector Recorderem.
-- [ ] **Description vkládaná přes f-string do `innerHTML`** #nová-chyba
+- [x] **Description vkládaná přes f-string do `innerHTML`** - HOTOVO (bezpečné argumenty místo f-stringu) #nová-chyba
   - `src/uploader.py` `upload_single_product()`: `execute_script(f"arguments[0].innerHTML = '{description}';")`. Popis s apostrofem (v češtině běžný) rozbije JS, zároveň je to vektor skript injection.
   - Řešení: `self.driver.execute_script("arguments[0].innerHTML = arguments[1];", desc_editor, description)`.
 - [ ] **Nevalidní enumy pro Etsy v3 API** #nová-chyba
