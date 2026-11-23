@@ -28,7 +28,7 @@ from src.browser_utils import (
 )
 from src import progress
 from src.logger import setup_logger, log_error_screenshot
-from src.fill_csv import read_products_csv, generate_etsy_csv
+from src.fill_csv import read_products_csv
 
 logger = setup_logger("uploader")
 

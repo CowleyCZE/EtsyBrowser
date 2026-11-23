@@ -9,16 +9,16 @@ from src.logger import setup_logger
 
 logger = setup_logger("fill_csv")
 
-# Etsy CSV field mapping
-ETSY_FIELDS = {
+# Etsy CSV field names (Etsy expects shop_section_id, not shop_section)
+ETSY_FIELD_NAMES = {
     "title": "title",
     "description": "description",
     "price": "price",
     "quantity": "quantity",
-    "category": "category_path",
+    "category_path": "category_path",
     "tags": "tags",
-    "image": "image_urls",
-    "shop_section": "shop_section_id",
+    "image_urls": "image_urls",
+    "shop_section_id": "shop_section_id",
     "state": "state",
     "who_made": "who_made",
     "is_customizable": "is_customizable",
@@ -87,7 +87,7 @@ def generate_etsy_csv(products: list[dict], output_path: str) -> str:
         "category_path",
         "tags",
         "image_urls",
-        "shop_section",
+        "shop_section_id",
         "state",
         "who_made",
         "is_customizable",
@@ -113,7 +113,7 @@ def generate_etsy_csv(products: list[dict], output_path: str) -> str:
                 row['category_path'] = product.get('category_path', 'Art&Collectibles:Prints:DigitalPrints')
                 row['tags'] = product.get('tags', '')
                 row['image_urls'] = product.get('image_paths', '')
-                row['shop_section'] = product.get('shop_section', '')
+                row['shop_section_id'] = product.get('shop_section_id', '')
                 
                 # Set default values for Etsy
                 row['state'] = DEFAULT_VALUES['state']

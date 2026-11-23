@@ -20,7 +20,7 @@ COLUMNS: List[Tuple[str, str]] = [
     ("tags", "Tagy (oddělené čárkou)"),
     ("category_path", "Kategorie"),
     ("image_paths", "Obrázky (cesty oddělené středníkem)"),
-    ("shop_section", "Sekce obchodu"),
+    ("shop_section_id", "Sekce obchodu (ID)"),
 ]
 EDIT_KEYS = [key for key, _ in COLUMNS]
 

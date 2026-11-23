@@ -104,7 +104,7 @@ def test_uploader_csv_editor_and_run(client, tmp_path, monkeypatch):
 
     assert "desc A" in client.get("/uploader").text
 
-    empty = {f"f2__{c}": "" for c in ("description", "tags", "category_path", "image_paths", "shop_section", "quantity")}
+    empty = {f"f2__{c}": "" for c in ("description", "tags", "category_path", "image_paths", "shop_section_id", "quantity")}
     form = {"row_count": "2", "f0__title": "A2", "f0__description": "desc A", "f0__price": "5,5",
             "f0__quantity": "3", "f1__title": "B", "del1": "on", "f2__title": "C", "f2__price": "7", **empty}
     bad = client.post("/uploader/csv", data={**form, "f2__price": "abc"}, follow_redirects=False)

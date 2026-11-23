@@ -197,7 +197,7 @@ Time elapsed: 1542.3s
 ### Struktura souboru
 
 ```csv
-title,description,price,tags,category_path,image_paths,shop_section
+title,description,price,tags,category_path,image_paths,shop_section_id
 ```
 
 ### Popis sloupců
@@ -210,12 +210,12 @@ title,description,price,tags,category_path,image_paths,shop_section
 | `tags` | Ano | 13 štítků oddělených čárkami | "digital,art,neon,modern" |
 | `category_path` | Doporučeno | Cesta ke kategorii | "Art&Collectibles:Prints:DigitalPrints" |
 | `image_paths` | Doporučeno | Cesty k obrázkům (max 10, oddělené `;`) | "./images/img1.jpg;./images/img2.jpg" |
-| `shop_section` | Volitelně | Sekce obchodu | "Digital Prints" |
+| `shop_section_id` | Volitelně | Sekce obchodu | "Digital Prints" |
 
 ### Příklad
 
 ```csv
-title,description,price,tags,category_path,image_paths,shop_section
+title,description,price,tags,category_path,image_paths,shop_section_id
 "Neon Cityscape","<b>AI-generated neon cityscape digital print</b>. Perfect for modern wall decor. High resolution 300 DPI. Instant download.",14.99,"digital art,neon,cityscape,modern,wall art,printable,AI art,abstract,night city","Art&Collectibles:Prints:DigitalPrints","./images/neon01.jpg;./images/neon02.jpg","AI Digital Prints"
 "Abstract Waves","<b>Beautiful abstract waves</b> with calming blue tones. Perfect for bedroom or office. Digital download ready.",12.99,"digital art,abstract,waves,ocean,blue,modern art,printable","Art&Collectibles:Prints:DigitalPrints","./images/waves01.jpg","AI Digital Prints"
 ```

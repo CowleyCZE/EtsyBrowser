@@ -70,7 +70,7 @@ Otevřete soubor `config.json` a vyplňte vaše údaje:
 Vytvořte nebo upravte soubor `products.csv`:
 
 ```csv
-title,description,price,tags,category_path,image_paths,shop_section
+title,description,price,tags,category_path,image_paths,shop_section_id
 "Název produktu","<b>Popis</b> ve formátu HTML",12.99,"tag1,tag2,tag3","Art&Collectibles:Prints:DigitalPrints","./images/foto1.jpg;./images/foto2.jpg","Sekce obchodu"
 ```
 
@@ -82,7 +82,7 @@ title,description,price,tags,category_path,image_paths,shop_section
 | `tags` | Ano | Štítky oddělené čárkami (max 13) |
 | `category_path` | Doporučeno | Cesta ke kategorii |
 | `image_paths` | Doporučeno | Cesty k obrázkům oddělené středníkem |
-| `shop_section` | Volitelně | Sekce obchodu |
+| `shop_section_id` | Volitelně | Sekce obchodu |
 
 #### Příprava obrázků
 
