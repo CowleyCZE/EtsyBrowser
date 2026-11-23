@@ -25,6 +25,9 @@ Pozn.: následující změny jsou napsané, ale NEOTESTOVANÉ proti živému Ets
 - [ ] **Ověřit publikaci na reálném draftu** - ČÁSTEČNĚ HOTOVO #nová-chyba
   - Hotovo: `taxonomy_id` z taxonomie (nebo `ETSY_TAXONOMY_ID`), tags jako řetězec, titulek ≤140, max 13 tagů ≤20 znaků, AI disclosure v popisu, ZIPy do `04_Delivery/`, `upload_listing_file`, `update_listing_state`, zveřejnění až po potvrzení, `etsy.listing_id` v `listing_data.json` brání duplicitám. Z GUI jde publikovat z detailu produktu (tlačítka „Nahrát jako draft“ a „Zveřejnit“).
   - Zbývá: spustit na jednom produktu, ověřit formát `tags` (řetězec vs. pole) a nalezené `taxonomy_id`, případně opravit.
+- [ ] **Etsy vrací 400 při nahrávání digitálního souboru (PDF s odkazem)** - OPRAVENO retry (ověřit) #nová-chyba
+  - Příznaky (24. 11. 04:01, listing 4623552003): `{"error":"An error ocurred while uploading your file, please try again."}`, PDF se nehodilo na draft, obrázky ano. Endpoint pro soubory občas vrací 400 i pro platný požadavek (typicky krátce po vytvoření listingu); kód navíc dělal druhý pokus (ASCII název) jen při diakritice, tedy pro čistě ASCII názvy jen jeden pokus.
+  - OPRAVENO v `automation/etsy_api.py`: `upload_listing_file` opakuje pokusy (3× s čekáním 5/20/60 s), při diakritice zkusí i ASCII název, posílá MIME typ podle přípony a po každé chybě ověří, zda soubor na listingu přesto není. Ověřit opakovaným nahráním PDF na draft;
 - [ ] **Limit Etsy 5 souborů × 20 MB vs. velikost tiskových souborů** - OPRAVENO (viz B-4), ověřit #nová-chyba
   - Bundle (5 artů × 5 velikostí JPEG q95) se do limitu nevejde; `build_delivery_zips` to detekuje a draft nevytvoří. Rozhodnout: PDF s odkazem ke stažení, nižší kvalita/menší sada velikostí pro doručení, nebo jiný způsob doručení.
 
