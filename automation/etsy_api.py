@@ -8,6 +8,7 @@ celý soubor s tokeny bezpečně přepíše.
 """
 
 import json
+import mimetypes
 import os
 import time
 import unicodedata
@@ -28,6 +29,8 @@ REFRESH_MARGIN_SECONDS = 120    # obnovit token, pokud vyprší dřív než za 2
 MAX_RETRIES = 3                 # opakování při 429 / 5xx / síťové chybě
 FILE_UPLOAD_TIMEOUT = (5, 300)  # digitální soubory až 20 MB
 MAX_LISTING_FILE_BYTES = 20 * 1024 * 1024  # limit Etsy na jeden digitální soubor
+FILE_UPLOAD_ATTEMPTS = 3                    # opakování při 400 (Etsy endpoint pro soubory je občas nespolehlivý)
+FILE_UPLOAD_RETRY_DELAYS = (5, 20, 60)      # čekání mezi pokusy (s)
 
 
 class EtsyAuthError(RuntimeError):
@@ -322,6 +325,11 @@ class EtsyClient:
         """Nahraje digitální soubor (to, co kupující dostane ke stažení) k listingu.
 
         Etsy limity: max. 5 souborů na listing, každý max. 20 MB.
+        Endpoint pro soubory občas vrátí 400 "An error ocurred while
+        uploading your file, please try again." i pro zcela platný požadavek
+        (typicky krátce po vytvoření listingu), proto se pokusy opakují s
+        časovým odstupem a po každé chybě se ověří, zda soubor na listingu
+        náhodou přesto není.
         """
         try:
             size = os.path.getsize(file_path)
@@ -346,35 +354,44 @@ class EtsyClient:
             print(f"❌ Nelze přečíst soubor {file_path}: {e}")
             return False
 
-        # První pokus s původním názvem; pokud název obsahuje diakritiku a Etsy vrátí chybu, druhý pokus s ASCII.
+        mime = mimetypes.guess_type(name)[0] or "application/octet-stream"
+        # První pokus s původním názvem; při diakritice v názvu i pokus s ASCII názvem.
         ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii") or "file.zip"
-        attempts = [name] if ascii_name == name else [name, ascii_name]
-        for upload_name in attempts:
-            try:
-                response = self._request(
-                    "POST",
-                    url,
-                    timeout=FILE_UPLOAD_TIMEOUT,
-                    files={"file": (upload_name, content)},
-                    data={"name": upload_name, "rank": rank},
-                )
-            except (EtsyAuthError, requests.RequestException) as e:
-                print(f"❌ Chyba při nahrávání souboru: {e}")
-                response = None
-            if response is not None and response.status_code == 201:
-                print(f"✅ Digitální soubor {upload_name} nahrán.")
-                return True
-            if response is not None:
-                print(f"⚠️ Etsy vrátilo {response.status_code} při nahrávání souboru: {response.text[:200]}")
-            # Etsy API někdy vrátí chybu, ale soubor přesto uloží - ověřit přímo na listingu
-            time.sleep(3)
-            after = self.get_listing_files(listing_id)
-            if after is not None and (
-                any(str(f.get("filename", "")) in (name, upload_name) for f in after)
-                or (before is not None and len(after) > before)
-            ):
-                print(f"✅ Digitální soubor {name} je na listingu (ověřeno), chybu Etsy ignoruji.")
-                return True
+        upload_names = [name] if ascii_name == name else [name, ascii_name]
+
+        attempt_no = 0
+        for upload_name in upload_names:
+            for _ in range(FILE_UPLOAD_ATTEMPTS):
+                if attempt_no > 0:
+                    wait = FILE_UPLOAD_RETRY_DELAYS[min(attempt_no - 1, len(FILE_UPLOAD_RETRY_DELAYS) - 1)]
+                    print(f"⏳ Opakuji nahrávání digitálního souboru (pokus {attempt_no + 1}) za {wait} s...")
+                    time.sleep(wait)
+                attempt_no += 1
+                try:
+                    response = self._request(
+                        "POST",
+                        url,
+                        timeout=FILE_UPLOAD_TIMEOUT,
+                        files={"file": (upload_name, content, mime)},
+                        data={"name": upload_name, "rank": rank},
+                    )
+                except (EtsyAuthError, requests.RequestException) as e:
+                    print(f"❌ Chyba při nahrávání souboru: {e}")
+                    response = None
+                if response is not None and response.status_code == 201:
+                    print(f"✅ Digitální soubor {upload_name} nahrán.")
+                    return True
+                if response is not None:
+                    print(f"⚠️ Etsy vrátilo {response.status_code} při nahrávání souboru: {response.text[:200]}")
+                # Etsy API někdy vrátí chybu, ale soubor přesto uloží - ověřit přímo na listingu
+                time.sleep(3)
+                after = self.get_listing_files(listing_id)
+                if after is not None and (
+                    any(str(f.get("filename", "")) in (name, upload_name) for f in after)
+                    or (before is not None and len(after) > before)
+                ):
+                    print(f"✅ Digitální soubor {name} je na listingu (ověřeno), chybu Etsy ignoruji.")
+                    return True
         print(f"❌ Digitální soubor {name} se nepodařilo nahrát.")
         return False
 
