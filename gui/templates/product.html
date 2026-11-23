@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ p.sku or p.folder }} – EtsyBrowser{% endblock %}
+{% block content %}
+<p><a href="/products">← Zpět na sklad</a></p>
+<h1>{{ p.kind_label }} {{ p.sku or p.folder }}</h1>
+<p class="muted">Stav: <strong>{{ p.status }}</strong>{% if p.listing_id %} · listing_id {{ p.listing_id }}{% endif %}</p>
+{% if p.status != 'nový' %}
+<div class="flash warn">Produkt už je na Etsy. Úpravy se uloží jen lokálně a na Etsy se nepromítnou.</div>
+{% endif %}
+
+{% if errors %}
+<div class="flash bad"><strong>Změny nebyly uloženy:</strong>
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+{% if p.warnings %}
+<div class="flash warn"><strong>Upozornění k produktu:</strong>
+  <ul>{% for w in p.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+{% if p.kind == 'single' and not p.seo_generated %}
+<div class="flash warn">Titulek, popis a tagy jsou obecné (SEO se nevygenerovalo). Uprav je níže, nebo příště doplň téma u obrázku ve frontě a zkontroluj Groq klíč.</div>
+{% endif %}
+
+{% if p.has_meta and p.external_delivery %}
+<div class="card">
+  <h2>Doručení bundlu přes odkaz</h2>
+  <p class="muted">Bundle se nevejde do limitu Etsy (max. 5 souborů á 20 MB). Kupující proto dostane PDF s odkazem na plné soubory. Postup: (1) připrav ZIP, (2) nahraj ho na Drive/Dropbox a vytvoř veřejný odkaz ke stažení, (3) vlož odkaz sem, (4) nahraj draft na Etsy.</p>
+  <form method="post" action="/products/{{ p.kind }}/{{ p.folder | urlencode }}/archive-zip">
+    <button class="btn secondary" type="submit">{% if p.zip_ready %}Připravit ZIP znovu{% else %}Připravit ZIP ke stažení{% endif %}</button>
+    {% if p.zip_ready %}<span class="muted"> ZIP je ve složce produktu <code>04_Delivery/</code>.</span>{% endif %}
+  </form>
+  <form method="post" action="/products/{{ p.kind }}/{{ p.folder | urlencode }}/delivery-url">
+    <label>Odkaz ke stažení (https://...)
+      <input type="text" name="download_url" value="{{ p.download_url }}" placeholder="https://drive.google.com/...">
+    </label>
+    <button class="btn" type="submit">Uložit odkaz</button>
+    {% if not p.download_url %}<span class="muted"> Bez odkazu nelze draft na Etsy vytvořit.</span>{% endif %}
+  </form>
+</div>
+{% endif %}
+
+{% if p.has_meta %}
+<div class="card">
+  <h2>Etsy</h2>
+  {% if p.status == 'nový' %}
+    <p class="muted">Nejdřív ulož případné úpravy níže. Vytvoří se draft přes Etsy API (včetně obrázků a digitálních souborů); nezveřejní se.</p>
+    <form method="post" action="/products/{{ p.kind }}/{{ p.folder | urlencode }}/publish"><button class="btn" type="submit">Nahrát jako draft na Etsy</button></form>
+  {% elif p.status == 'draft na Etsy' %}
+    {% if p.files_uploaded %}
+    <form method="post" action="/products/{{ p.kind }}/{{ p.folder | urlencode }}/activate">
+      <label class="check"><input type="checkbox" name="confirm"> Draft jsem zkontroloval(a) na Etsy a rozumím, že zveřejnění je zpoplatněné (Etsy účtuje poplatek za listing).</label>
+      <button class="btn" type="submit">Zveřejnit na Etsy</button>
+    </form>
+    {% else %}
+    <div class="flash warn">Digitální soubory se nenahrály, draft nelze zveřejnit. Dokonči ho ručně na Etsy, nebo ho smaž a odstraň klíč <code>etsy</code> z <code>listing_data.json</code>.</div>
+    {% endif %}
+  {% else %}
+    <p class="muted">Listing je zveřejněn na Etsy.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if p.images %}
+<div class="thumbs">
+  {% for img in p.images %}
+    <img src="/media/{{ p.kind }}/{{ p.folder | urlencode }}/{{ img | urlencode }}" alt="{{ img }}" loading="lazy">
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if p.has_meta %}
+<form method="post" action="/products/{{ p.kind }}/{{ p.folder | urlencode }}" class="card">
+  <label>Titulek (max. 140 znaků)
+    <input type="text" name="title" value="{{ form.title if form else p.title }}">
+  </label>
+  <label>Popis
+    <textarea name="description" rows="10">{{ form.description if form else p.description }}</textarea>
+  </label>
+  <p class="muted">Upozornění o AI obsahu se k popisu přidá automaticky při publikaci.</p>
+  <label>Tagy (oddělené čárkou, max. 13, každý max. 20 znaků)
+    <input type="text" name="tags" value="{{ form.tags if form else p.tags }}">
+  </label>
+  <label>Cena (EUR)
+    <input type="text" name="price" value="{{ form.price if form else p.price }}">
+  </label>
+  <button class="btn" type="submit">Uložit změny</button>
+</form>
+{% else %}
+<div class="flash bad">Produkt nemá <code>03_Metadata/listing_data.json</code>, nelze ho upravit.</div>
+{% endif %}
+{% endblock %}

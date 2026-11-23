@@ -1,0 +1,16 @@
+/* Úlohy, průběh a formuláře pro generování */
+.badge.run { background: #0969da; }
+.badge.warn { background: var(--warn); }
+.bar { background: var(--line); border-radius: 6px; height: 10px; overflow: hidden; min-width: 120px; }
+.bar .fill { background: var(--accent); height: 100%; transition: width .3s; }
+.bar.done .fill { background: var(--ok); }
+.bar.failed .fill { background: var(--bad); }
+.joblink { color: inherit; font-weight: 600; text-decoration: none; }
+.joblink:hover { text-decoration: underline; }
+.btn.danger { background: var(--bad); }
+.queue-list { max-height: 180px; overflow: auto; margin: 8px 0; padding-left: 20px; }
+input[type=file] { margin: 8px 0; max-width: 100%; }
+dl.meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0 0 12px; }
+dl.meta dt { color: var(--muted); }
+dl.meta dd { margin: 0; }
+pre.log { max-height: 480px; }

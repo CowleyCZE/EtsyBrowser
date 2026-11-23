@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Etsy připojení – EtsyBrowser{% endblock %}
+{% block head %}{% if oauth.running %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block content %}
+<h1>Etsy připojení</h1>
+
+<div class="card">
+  <h2>Stav tokenu</h2>
+  <p><span class="badge {{ token.kind }}">{{ token.label }}</span></p>
+  <p class="muted">{{ token.detail }}</p>
+  <p class="muted">shop_id: <strong>{{ shop_id or 'nenastaveno' }}</strong></p>
+  <div class="actions">
+    <form method="post" action="/etsy/connect">
+      <button class="btn" type="submit" {% if oauth.running %}disabled{% endif %}>
+        {{ 'Obnovit připojení' if token.state != 'missing' else 'Připojit k Etsy' }}
+      </button>
+    </form>
+    <form method="post" action="/etsy/test">
+      <button class="btn secondary" type="submit">Otestovat spojení</button>
+    </form>
+  </div>
+  <p class="muted">Připojení otevře přihlášení k Etsy v prohlížeči. Po schválení se vrátíš sem. Heslo se do aplikace nikdy neposílá.</p>
+</div>
+
+{% if test %}
+<div class="flash {{ 'ok' if test.ok else 'bad' }}">
+  {{ test.message }}
+  {% if test.ok %}Obchod: <strong>{{ test.shop_name }}</strong> (shop_id {{ test.shop_id }}).{% endif %}
+</div>
+{% endif %}
+
+{% if oauth.running or oauth.done %}
+<div class="card">
+  <h2>Průběh připojení</h2>
+  {% if oauth.running %}<p class="muted">Čekám na schválení v prohlížeči (limit 5 minut)…</p>{% endif %}
+  {% if oauth.error %}<div class="flash bad">Připojení se nezdařilo: {{ oauth.error }}</div>{% endif %}
+  {% if oauth.done and not oauth.error %}<div class="flash ok">Připojení dokončeno.</div>{% endif %}
+  <pre class="log">{{ oauth.log | join('\n') }}</pre>
+</div>
+{% endif %}
+{% endblock %}

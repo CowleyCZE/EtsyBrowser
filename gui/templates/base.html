@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}EtsyBrowser{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/jobs.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="top">
+    <span class="brand">EtsyBrowser</span>
+    <nav>
+      {% for href, label in nav %}
+        <a href="{{ href }}" class="{{ 'active' if path == href or (href != '/' and path.startswith(href + '/')) else '' }}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </header>
+  <main>
+    {% if flash %}<div class="flash {{ flash_kind }}">{{ flash }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

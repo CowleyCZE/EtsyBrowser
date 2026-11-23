@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Migrace – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Migrace starých produktů</h1>
+
+<div class="card">
+  <p class="muted">Převede produkty ze staré struktury (<code>01_Hotove_Produkty</code>) do skladu <code>automation/02_Warehouse</code>. Původní složky se nemění (soubory se kopírují), každý produkt dostane nové SKU a už zmigrované složky se příště přeskočí. Nejdřív se vždy zobrazí náhled, co se stane.</p>
+  <form method="get" action="/migrate">
+    <label>Zdrojová složka se starými produkty
+      <input type="text" name="source" value="{{ source }}">
+    </label>
+    <button class="btn secondary" type="submit">Zobrazit náhled</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Náhled</h2>
+  {% if not exists %}
+    <div class="flash bad">Složka neexistuje: <code>{{ source }}</code>. Zadej správnou cestu a znovu zobraz náhled.</div>
+  {% elif not plan %}
+    <p class="muted">Ve složce nejsou žádné podsložky s produkty.</p>
+  {% else %}
+    <p class="muted">Nalezeno {{ plan | length }} složek, k migraci: <strong>{{ todo }}</strong>, už zmigrováno: {{ plan | length - todo }}.</p>
+    <table>
+      <tr><th>Složka</th><th>Typ</th><th>Název po migraci</th><th>Souborů</th><th>Stav</th></tr>
+      {% for p in plan %}
+      <tr>
+        <td>{{ p.folder }}</td>
+        <td>{{ 'Bundle' if p.kind == 'bundle' else 'Single' }}</td>
+        <td>SKU_{{ p.keyword }}</td>
+        <td>{{ p.files }}</td>
+        <td>{% if p.already_migrated %}zmigrováno jako {{ p.migrated_as }}{% else %}čeká{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <form method="post" action="/migrate/run">
+      <input type="hidden" name="source" value="{{ source }}">
+      <label class="check"><input type="checkbox" name="confirm"> Rozumím, že se soubory zkopírují do skladu a produkty dostanou nová SKU.</label>
+      <button class="btn" type="submit" {% if not todo %}disabled{% endif %}>Spustit migraci ({{ todo }} složek)</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

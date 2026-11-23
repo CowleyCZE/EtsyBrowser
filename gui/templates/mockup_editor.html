@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}Editor šablony – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Editor šablony: {{ name }}</h1>
+<p><a href="/mockups?template={{ name | urlencode }}">← Zpět na Mockupy</a></p>
+
+{% for e in errors %}<div class="flash bad">{{ e }}</div>{% endfor %}
+
+<div class="card">
+  <p class="muted">Označ, kam se v šabloně vloží obrázek. <strong>Perspektiva:</strong> klikni 4 rohy rámu kolem dokola – levý horní, pravý horní, pravý dolní, levý dolní. <strong>Obdélník:</strong> klikni 2 protilehlé rohy. Body můžeš přetahovat myší. Rozměry šablony: {{ width }}×{{ height }} px.</p>
+
+  <div class="editor-modes">
+    <label class="check"><input type="radio" name="modesel" value="perspective" {{ 'checked' if mode == 'perspective' else '' }}> Perspektiva (4 rohy)</label>
+    <label class="check"><input type="radio" name="modesel" value="rect" {{ 'checked' if mode == 'rect' else '' }}> Obdélník (2 rohy)</label>
+  </div>
+
+  <canvas id="editor" width="{{ width }}" height="{{ height }}" class="editor-canvas"></canvas>
+  <p class="muted" id="status"></p>
+
+  <div class="actions">
+    <button class="btn secondary" type="button" id="undo">Zpět (odebrat poslední bod)</button>
+    <button class="btn secondary" type="button" id="clear">Vymazat body</button>
+  </div>
+
+  <form method="post" action="/mockups/editor/save" id="saveform">
+    <input type="hidden" name="template" value="{{ name }}">
+    <input type="hidden" name="mode" id="mode" value="{{ mode }}">
+    <input type="hidden" name="points" id="points" value="[]">
+    <label>Kategorie
+      <select name="category_select" id="catsel">
+        {% for c in cats %}<option value="{{ c }}" {{ 'selected' if c == category else '' }}>{{ c }}</option>{% endfor %}
+        <option value="__new__">Nová kategorie…</option>
+      </select>
+    </label>
+    <label id="newcat-wrap" hidden>Název nové kategorie
+      <input type="text" name="category_new" maxlength="60">
+    </label>
+    <p class="muted">Generování bundlů a produktů používá kategorie „Obyčejný byt“, „Střední třída“ a „Luxusní sídlo“. Šablona v jiné kategorii se použije jen v ručním náhledu.</p>
+    <button class="btn" type="submit">Uložit rám šablony</button>
+  </form>
+
+  {% if configured %}
+  <form method="post" action="/mockups/editor/remove" class="inline-form">
+    <input type="hidden" name="template" value="{{ name }}">
+    <button class="btn secondary" type="submit">Smazat konfiguraci šablony</button>
+  </form>
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  var W = {{ width }}, H = {{ height }};
+  var canvas = document.getElementById('editor');
+  var ctx = canvas.getContext('2d');
+  var img = new Image();
+  var points = {{ points | tojson }};
+  var mode = {{ mode | tojson }};
+  var drag = -1;
+  var LABELS = ['1 levý horní', '2 pravý horní', '3 pravý dolní', '4 levý dolní'];
+
+  function need() { return mode === 'perspective' ? 4 : 2; }
+  function radius() { return Math.max(7, W / 110); }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    if (img.complete && img.naturalWidth) ctx.drawImage(img, 0, 0, W, H);
+    ctx.lineWidth = Math.max(2, W / 400);
+    ctx.strokeStyle = '#f1641e';
+    ctx.fillStyle = 'rgba(241,100,30,0.18)';
+    if (mode === 'rect' && points.length === 2) {
+      var x = Math.min(points[0][0], points[1][0]), y = Math.min(points[0][1], points[1][1]);
+      var w = Math.abs(points[0][0] - points[1][0]), h = Math.abs(points[0][1] - points[1][1]);
+      ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h);
+    } else if (mode === 'perspective' && points.length > 1) {
+      ctx.beginPath(); ctx.moveTo(points[0][0], points[0][1]);
+      for (var i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+      if (points.length === 4) { ctx.closePath(); ctx.fill(); }
+      ctx.stroke();
+    }
+    ctx.font = 'bold ' + Math.max(14, W / 60) + 'px sans-serif';
+    points.forEach(function (p, i) {
+      ctx.beginPath(); ctx.arc(p[0], p[1], radius(), 0, Math.PI * 2);
+      ctx.fillStyle = '#f1641e'; ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000';
+      var label = mode === 'perspective' ? LABELS[i] : String(i + 1);
+      ctx.lineWidth = 3; ctx.strokeText(label, p[0] + radius() + 4, p[1] - radius());
+      ctx.lineWidth = Math.max(2, W / 400);
+      ctx.fillText(label, p[0] + radius() + 4, p[1] - radius());
+    });
+    var st = document.getElementById('status');
+    st.textContent = 'Označeno bodů: ' + points.length + ' / ' + need() + (points.length === need() ? ' – můžeš uložit.' : '');
+    document.getElementById('mode').value = mode;
+    document.getElementById('points').value = JSON.stringify(points);
+  }
+
+  function pos(ev) {
+    var r = canvas.getBoundingClientRect();
+    return [Math.round((ev.clientX - r.left) * W / r.width), Math.round((ev.clientY - r.top) * H / r.height)];
+  }
+  function nearest(p) {
+    var best = -1, bd = Infinity, limit = radius() * 2.2;
+    points.forEach(function (q, i) {
+      var d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (d < bd && d <= limit) { bd = d; best = i; }
+    });
+    return best;
+  }
+
+  canvas.addEventListener('pointerdown', function (ev) {
+    var p = pos(ev), i = nearest(p);
+    if (i >= 0) { drag = i; canvas.setPointerCapture(ev.pointerId); }
+    else if (points.length < need()) { points.push(p); }
+    draw();
+  });
+  canvas.addEventListener('pointermove', function (ev) {
+    if (drag < 0) return;
+    var p = pos(ev);
+    points[drag] = [Math.min(W, Math.max(0, p[0])), Math.min(H, Math.max(0, p[1]))];
+    draw();
+  });
+  canvas.addEventListener('pointerup', function () { drag = -1; });
+
+  document.getElementById('undo').onclick = function () { points.pop(); draw(); };
+  document.getElementById('clear').onclick = function () { points = []; draw(); };
+  document.querySelectorAll('input[name=modesel]').forEach(function (r) {
+    r.onchange = function () { mode = r.value; points = points.slice(0, need()); draw(); };
+  });
+
+  var catsel = document.getElementById('catsel');
+  function syncCat() { document.getElementById('newcat-wrap').hidden = catsel.value !== '__new__'; }
+  catsel.onchange = syncCat; syncCat();
+
+  document.getElementById('saveform').addEventListener('submit', function (ev) {
+    if (points.length !== need()) {
+      ev.preventDefault();
+      alert('Nejdřív označ všechny body (' + need() + ').');
+    }
+  });
+
+  img.onload = draw;
+  img.src = '/mockups/template/{{ name | urlencode }}';
+  draw();
+})();
+</script>
+{% endblock %}

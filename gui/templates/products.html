@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Sklad produktů – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Sklad produktů</h1>
+
+<form method="get" action="/products" class="filters">
+  <input type="text" name="q" value="{{ q }}" placeholder="Hledat podle názvu nebo SKU">
+  <select name="status">
+    <option value="">Všechny stavy</option>
+    {% for s in ['nový', 'draft na Etsy', 'publikováno'] %}
+      <option value="{{ s }}" {% if s == status %}selected{% endif %}>{{ s }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn" type="submit">Filtrovat</button>
+</form>
+
+{% if items %}
+<div class="grid">
+  {% for p in items %}
+  <a class="product" href="/products/{{ p.kind }}/{{ p.folder | urlencode }}">
+    {% if p.thumb %}
+      <img src="/media/{{ p.kind }}/{{ p.folder | urlencode }}/{{ p.thumb | urlencode }}" alt="" loading="lazy">
+    {% else %}
+      <div class="noimg">bez náhledu</div>
+    {% endif %}
+    <div class="pinfo">
+      <strong>{{ p.title }}</strong>
+      <span class="muted">{{ p.kind_label }} · {{ p.sku or p.folder }}</span>
+      <span class="muted">{{ p.status }} · {{ p.date }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<p class="muted">Nic nenalezeno. Produkty se objeví po vygenerování (<code>automation/02_Warehouse</code>).</p>
+{% endif %}
+{% endblock %}

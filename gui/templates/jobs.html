@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Úlohy – EtsyBrowser{% endblock %}
+{% block head %}{% if refresh %}<meta http-equiv="refresh" content="3">{% endif %}{% endblock %}
+{% block content %}
+<h1>Úlohy</h1>
+
+{% if items %}
+<table>
+  <thead><tr><th>Úloha</th><th>Stav</th><th>Průběh</th><th>Vytvořeno</th><th>Trvání</th></tr></thead>
+  <tbody>
+  {% for j in items %}
+    <tr>
+      <td><a class="joblink" href="/jobs/{{ j.id }}">{{ j.name }}</a>{% if j.message and j.active %}<br><span class="muted">{{ j.message }}</span>{% endif %}</td>
+      <td><span class="badge {{ 'ok' if j.status == 'done' else 'bad' if j.status == 'failed' else 'warn' if j.status == 'cancelled' else 'run' }}">{{ j.status_label }}</span></td>
+      <td><div class="bar {{ j.status }}"><div class="fill" style="width: {{ j.progress }}%"></div></div></td>
+      <td>{{ j.created_str }}</td>
+      <td>{{ (j.duration // 60) }} min {{ (j.duration % 60) }} s</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">Zatím nebyla spuštěna žádná úloha. Začni na stránce <a href="/generate">Generovat</a>.</p>
+{% endif %}
+{% endblock %}

@@ -1,7 +1,9 @@
 """Browser utilities for Etsy Browser Bulk Uploader."""
 
+import os
 import random
 import time
+from pathlib import Path
 from typing import Optional
 
 from selenium import webdriver
@@ -11,12 +13,43 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium_stealth import stealth
 
 from src.logger import setup_logger
 
 logger = setup_logger("browser_utils")
+
+
+def _fix_driver_path(path: str) -> str:
+    """Opraví cestu od webdriver-manageru.
+
+    Verze 4.0.1 u balíčků Chrome for Testing někdy vrátí první soubor z archivu
+    (např. THIRD_PARTY_NOTICES.chromedriver) místo samotného programu `chromedriver`.
+    """
+    p = Path(path)
+    if p.name in ("chromedriver", "chromedriver.exe"):
+        return path
+    for candidate in (p.parent / "chromedriver", p.parent / "chromedriver.exe"):
+        if candidate.is_file():
+            if os.name == "posix":
+                candidate.chmod(candidate.stat().st_mode | 0o111)
+            return str(candidate)
+    return path
+
+
+def build_user_agent(browser_version: str) -> str:
+    """Sestaví user agent s hlavní verzí skutečného Chrome (např. '158.0.8127.36' -> Chrome/158.0.0.0)."""
+    major = (browser_version or "").split(".")[0]
+    if not major.isdigit():
+        major = "120"
+    return (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        f"Chrome/{major}.0.0.0 Safari/537.36"
+    )
 
 
 def create_driver(headless: bool = False) -> webdriver.Chrome:
@@ -43,21 +76,32 @@ def create_driver(headless: bool = False) -> webdriver.Chrome:
     # Window size
     options.add_argument("--window-size=1920,1080")
     
-    # User agent
-    user_agent = (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/120.0.0.0 Safari/537.36"
-    )
-    options.add_argument(f"user-agent={user_agent}")
+    # User agent se nastavuje až po startu (podle skutečné verze Chrome), viz níže
     
-    # Create driver with webdriver-manager
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
+    # Primárně Selenium Manager (součást Selenium, vybere ovladač podle nainstalovaného Chromu),
+    # záložně webdriver-manager s opravenou cestou k ovladači.
+    try:
+        driver = webdriver.Chrome(options=options)
+    except (WebDriverException, OSError) as exc:
+        logger.warning(f"Selenium Manager selhal ({exc}), zkouším webdriver-manager")
+        service = Service(_fix_driver_path(ChromeDriverManager().install()))
+        driver = webdriver.Chrome(service=service, options=options)
     
+    # User agent podle skutečné hlavní verze Chrome (pevná stará verze by s ovladačem neseděla).
+    # Musí se předat i do stealth(): ten jinak UA znovu přepíše (původním UA prohlížeče, na Linuxu
+    # s "X11; Linux" a platformou Win32), čímž by předchozí přepis přestal platit.
+    user_agent = None
+    try:
+        user_agent = build_user_agent(driver.capabilities.get("browserVersion", ""))
+        driver.execute_cdp_cmd("Network.setUserAgentOverride", {"userAgent": user_agent, "platform": "Win32"})
+    except Exception as exc:  # noqa: BLE001 - bez přepisu UA poběží i další
+        logger.warning(f"Nepodařilo se nastavit user agent: {exc}")
+        user_agent = None
+
     # Apply selenium-stealth
     stealth(
         driver,
+        user_agent=user_agent,
         languages=["en-US", "en"],
         vendor="Google Inc.",
         platform="Win32",
@@ -132,7 +176,7 @@ def wait_for_element(
     by: By = By.CSS_SELECTOR,
     timeout: int = 10,
     clickable: bool = False
-) -> Optional[WebDriverWait]:
+) -> Optional[WebElement]:
     """Wait for element to be present or clickable.
     
     Args:
@@ -143,17 +187,15 @@ def wait_for_element(
         clickable: Wait for element to be clickable
         
     Returns:
-        WebDriverWait instance or None
+        Nalezený WebElement nebo None, pokud se element do timeoutu neobjevil
     """
     wait = WebDriverWait(driver, timeout)
     
     try:
         if clickable:
-            wait.until(EC.element_to_be_clickable((by, selector)))
-        else:
-            wait.until(EC.presence_of_element_located((by, selector)))
-        return wait
-    except Exception as e:
+            return wait.until(EC.element_to_be_clickable((by, selector)))
+        return wait.until(EC.presence_of_element_located((by, selector)))
+    except (TimeoutException, WebDriverException) as e:
         logger.error(f"Element not found: {selector} - {e}")
         return None
 
@@ -223,6 +265,6 @@ def find_element_by_any_selector(driver, selectors: list) -> Optional[webdriver.
             element = driver.find_element(By.CSS_SELECTOR, selector)
             if element and element.is_displayed():
                 return element
-        except:
+        except WebDriverException:
             continue
     return None

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Selenium upload – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Selenium upload</h1>
+
+<div class="card">
+  <h2>Spuštění</h2>
+  <p class="muted">Otevře se prohlížeč Chrome, přihlásí se na Etsy a nahraje produkty z <code>products.csv</code> (uložená verze níže). Upload přes prohlížeč podléhá změnám webu Etsy a může vést k omezení účtu; spolehlivější je publikace přes API v detailu produktu. Zpoždění a limit za hodinu se nastavují v <a href="/settings">Nastavení</a>.</p>
+  {% if creds_missing %}<div class="flash bad">Nejdřív doplň v <a href="/settings">Nastavení</a>: {{ creds_missing | join(', ') }}.</div>{% endif %}
+  {% if selectors.found and selectors.empty %}
+    <p class="muted warn-text">Selektory: {{ selectors.empty }} z {{ selectors.total }} je prázdných, použijí se výchozí (nemusí odpovídat aktuálnímu webu Etsy).</p>
+  {% elif not selectors.found %}
+    <p class="muted warn-text">Soubor <code>src/selectors.json</code> nebyl nalezen, použijí se výchozí selektory.</p>
+  {% endif %}
+  <form method="post" action="/uploader/run">
+    <label>Režim
+      <select name="mode">
+        <option value="visible" {{ '' if headless_default else 'selected' }}>Viditelné okno (nutné při 2FA / captche)</option>
+        <option value="headless" {{ 'selected' if headless_default else '' }}>Bez okna (headless)</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="confirm"> Rozumím, že se budou nahrávat produkty na můj Etsy účet.</label>
+    <button class="btn" type="submit" {% if creds_missing or not saved_count %}disabled{% endif %}>Spustit upload ({{ saved_count }} produktů)</button>
+  </form>
+  <p class="muted">Při 2FA nebo captche dokonči ověření ručně v okně Chrome, aplikace počká až 5 minut. Průběh a výsledek uvidíš v <a href="/jobs">Úlohách</a>.</p>
+</div>
+
+<div class="card">
+  <h2>Produkty v <code>products.csv</code></h2>
+  {% for e in errors %}<div class="flash bad">{{ e }}</div>{% endfor %}
+  {% if warnings %}
+  <div class="flash warn"><strong>Upozornění</strong> (neblokují uložení, ale upload obrázek nenajde):<br>
+    {% for w in warnings %}{{ w }}<br>{% endfor %}</div>
+  {% endif %}
+  <form method="post" action="/uploader/csv">
+    <input type="hidden" name="row_count" value="{{ saved_count }}">
+    {% for row in rows %}
+    {% set i = loop.index0 %}
+    <fieldset class="csv-row">
+      <legend>{% if i < saved_count %}Produkt {{ i + 1 }}{% else %}Nový produkt (nech prázdné, pokud nechceš přidávat){% endif %}</legend>
+      {% for key, label in fields %}
+        {% if key == 'description' %}
+        <label>{{ label }}<textarea name="f{{ i }}__{{ key }}" rows="4">{{ row.get(key, '') }}</textarea></label>
+        {% else %}
+        <label>{{ label }}<input type="text" name="f{{ i }}__{{ key }}" value="{{ row.get(key, '') }}"></label>
+        {% endif %}
+      {% endfor %}
+      {% for key in extras %}<input type="hidden" name="f{{ i }}__{{ key }}" value="{{ row.get(key, '') }}">{% endfor %}
+      {% if i < saved_count %}<label class="check"><input type="checkbox" name="del{{ i }}"> Smazat tento produkt</label>{% endif %}
+    </fieldset>
+    {% endfor %}
+    <button class="btn" type="submit">Uložit products.csv</button>
+  </form>
+</div>
+{% endblock %}

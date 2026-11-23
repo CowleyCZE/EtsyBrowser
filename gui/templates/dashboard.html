@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Přehled – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Přehled</h1>
+
+<div class="cards">
+  <div class="card">
+    <h2>Etsy</h2>
+    <p><span class="badge {{ d.token.kind }}">{{ d.token.label }}</span></p>
+    <p class="muted">{{ d.token.detail }}</p>
+    <a class="btn" href="/etsy">Spravovat připojení</a>
+  </div>
+  <div class="card">
+    <h2>Sklad produktů</h2>
+    <p class="big">{{ d.singles + d.bundles }}</p>
+    <p class="muted">{{ d.singles }}× Single, {{ d.bundles }}× Bundle</p>
+    <p class="muted">{{ d.drafts }}× draft na Etsy, {{ d.published }}× publikováno</p>
+  </div>
+  <div class="card">
+    <h2>Fronta obrázků</h2>
+    <p class="big">{{ d.queue }}</p>
+    <p class="muted">obrázků čeká ve složce <code>_To_Edit</code></p>
+  </div>
+</div>
+
+<div class="actions">
+  <a class="btn" href="/etsy">Test spojení s Etsy</a>
+  <a class="btn secondary" href="/settings">Nastavení</a>
+</div>
+
+<h2>Poslední úlohy</h2>
+{% if jobs %}
+<table>
+  <thead><tr><th>Úloha</th><th>Stav</th><th>Průběh</th><th>Vytvořeno</th></tr></thead>
+  <tbody>
+  {% for j in jobs %}
+    <tr>
+      <td><a class="joblink" href="/jobs/{{ j.id }}">{{ j.name }}</a></td>
+      <td><span class="badge {{ 'ok' if j.status == 'done' else 'bad' if j.status == 'failed' else 'warn' if j.status == 'cancelled' else 'run' }}">{{ j.status_label }}</span></td>
+      <td><div class="bar {{ j.status }}"><div class="fill" style="width: {{ j.progress }}%"></div></div></td>
+      <td>{{ j.created_str }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p><a href="/jobs">Všechny úlohy</a></p>
+{% else %}
+<p class="muted">Zatím žádné úlohy. <a href="/generate">Spustit generování</a>.</p>
+{% endif %}
+
+<h2>Poslední produkty</h2>
+{% if d.recent %}
+<table>
+  <thead><tr><th>Typ</th><th>SKU</th><th>Název</th><th>Stav</th><th>Změněno</th></tr></thead>
+  <tbody>
+  {% for p in d.recent %}
+    <tr><td>{{ p.kind }}</td><td>{{ p.sku or '—' }}</td><td>{{ p.title }}</td><td>{{ p.status }}</td><td>{{ p.date }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">Zatím tu nejsou žádné produkty. Vygenerované produkty se objeví po spuštění generátoru (<code>python automation/super_robot.py</code>) nebo na stránce <a href="/generate">Generovat</a>.</p>
+{% endif %}
+{% endblock %}

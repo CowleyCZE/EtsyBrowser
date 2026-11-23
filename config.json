@@ -7,5 +7,10 @@
   "delay_min": 2,
   "delay_max": 10,
   "max_products_per_hour": 50,
-  "csv_file": "products.csv"
+  "csv_file": "products.csv",
+  "groq": {
+    "model": "openai/gpt-oss-120b",
+    "timeout": 60,
+    "max_retries": 3
+  }
 }

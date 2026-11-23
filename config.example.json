@@ -8,6 +8,11 @@
   "delay_max": 10,
   "max_products_per_hour": 50,
   "csv_file": "products.csv",
+  "groq": {
+    "model": "openai/gpt-oss-120b",
+    "timeout": 60,
+    "max_retries": 3
+  },
   "prices": {
     "single": 5.90,
     "bundle": 9.90

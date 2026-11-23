@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Nastavení – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Nastavení</h1>
+
+{% if errors %}
+<div class="flash bad"><strong>Nastavení nebylo uloženo:</strong>
+  <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" action="/settings" autocomplete="off">
+  <div class="card">
+    <h2>Klíče a přihlašovací údaje</h2>
+    <p class="muted">Tajné hodnoty se nezobrazují. Pole nech prázdné, pokud je nechceš měnit. Ukládají se do <code>.env</code> (a <code>oauth/.env</code>) na tomto počítači.</p>
+    {% for f in s.fields %}
+    <label>{{ f.label }}
+      {% if f.secret %}
+        <input type="password" name="{{ f.name }}" placeholder="Beze změny ({{ f.masked }})" autocomplete="new-password">
+      {% else %}
+        <input type="text" name="{{ f.name }}" value="{{ f.value }}">
+      {% endif %}
+    </label>
+    {% endfor %}
+  </div>
+
+  <div class="card">
+    <h2>Ceny (USD)</h2>
+    <label>Single <input type="text" name="price_single" value="{{ s.prices.get('single', '') }}"></label>
+    <label>Bundle <input type="text" name="price_bundle" value="{{ s.prices.get('bundle', '') }}"></label>
+  </div>
+
+  <div class="card">
+    <h2>Selenium uploader</h2>
+    <label>Zpoždění min (s) <input type="text" name="delay_min" value="{{ s.cfg.get('delay_min', '') }}"></label>
+    <label>Zpoždění max (s) <input type="text" name="delay_max" value="{{ s.cfg.get('delay_max', '') }}"></label>
+    <label>Max. produktů za hodinu <input type="text" name="max_products_per_hour" value="{{ s.cfg.get('max_products_per_hour', '') }}"></label>
+    <label>URL správy obchodu <input type="text" name="etsy_url" value="{{ s.cfg.get('etsy_url', '') }}"></label>
+    <label class="check"><input type="checkbox" name="headless" {% if s.cfg.get('headless') %}checked{% endif %}> Spouštět prohlížeč bez okna (headless)</label>
+  </div>
+
+  <div class="card">
+    <h2>Groq (texty)</h2>
+    <label>Model <input type="text" name="groq_model" value="{{ s.groq.get('model', '') }}"></label>
+    <label>Timeout (s) <input type="text" name="groq_timeout" value="{{ s.groq.get('timeout', '') }}"></label>
+    <label>Počet opakování <input type="text" name="groq_max_retries" value="{{ s.groq.get('max_retries', '') }}"></label>
+  </div>
+
+  <button class="btn" type="submit">Uložit nastavení</button>
+</form>
+{% endblock %}

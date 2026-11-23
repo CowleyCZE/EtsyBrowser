@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Mockupy – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Mockupy</h1>
+
+<div class="card">
+  <h2>1. Obrázek pro náhled</h2>
+  {% if art_label %}
+    <p class="muted">Používá se: <strong>{{ art_label }}</strong></p>
+    <img class="art-thumb" src="/mockups/art/image?v={{ art_version }}" alt="Obrázek pro náhled">
+  {% else %}
+    <p class="muted">Zatím není vybrán žádný obrázek. Nahraj PNG nebo JPG (max. 80 MB), nebo nastav <code>TEST_ART_PATH</code> v <a href="/settings">Nastavení</a>.</p>
+  {% endif %}
+  <form method="post" action="/mockups/art" enctype="multipart/form-data">
+    <input type="hidden" name="template" value="{{ selected.name if selected else '' }}">
+    <input type="file" name="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" required>
+    <button class="btn secondary" type="submit">Nahrát obrázek</button>
+  </form>
+  {% if has_uploaded %}
+  <form method="post" action="/mockups/art/clear" class="inline-form">
+    <input type="hidden" name="template" value="{{ selected.name if selected else '' }}">
+    <button class="btn secondary" type="submit">Odebrat nahraný obrázek</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>2. Šablona</h2>
+  {% if items %}
+  <p class="muted">Klikni na šablonu pro náhled. Šablony bez konfigurace se vykreslí s výchozími rozměry; polohu rámu nastavíš v editoru šablony (tlačítko pod náhledem).</p>
+  <div class="grid">
+    {% for t in items %}
+    <a class="product {{ 'selected' if selected and selected.name == t.name else '' }}" href="/mockups?template={{ t.name | urlencode }}">
+      <img src="/mockups/template/{{ t.name | urlencode }}" alt="{{ t.name }}" loading="lazy">
+      <div class="pinfo">
+        <strong>{{ t.name }}</strong>
+        <span class="muted">{{ t.category or 'bez kategorie' }}</span>
+        <span class="muted {{ '' if t.configured else 'warn-text' }}">{{ t.mode_label }}</span>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted">Ve složce <code>automation/1_Mockup_Sablony</code> nejsou žádné PNG šablony.</p>
+  {% endif %}
+</div>
+
+{% if selected %}
+<div class="card">
+  <h2>3. Náhled: {{ selected.name }}</h2>
+  {% if art_label %}
+    <img class="mockup-preview" src="/mockups/render?template={{ selected.name | urlencode }}&v={{ art_version }}" alt="Náhled mockupu {{ selected.name }}">
+    <div class="actions">
+      <a class="btn" href="/mockups/render?template={{ selected.name | urlencode }}&download=1&v={{ art_version }}">Stáhnout v plné velikosti (JPG)</a>
+    </div>
+  {% else %}
+    <p class="muted">Pro náhled nejdřív nahraj obrázek (krok 1).</p>
+  {% endif %}
+  <div class="actions">
+    <a class="btn secondary" href="/mockups/editor?template={{ selected.name | urlencode }}">Upravit rám šablony (kalibrace)</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

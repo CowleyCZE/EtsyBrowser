@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Generovat – EtsyBrowser{% endblock %}
+{% block content %}
+<h1>Generovat</h1>
+
+{% if active %}
+<div class="flash warn">Právě běží nebo čeká {{ active }} úloh(a). Nové úlohy se zařadí do fronty a poběží postupně. <a href="/jobs">Zobrazit úlohy</a></div>
+{% endif %}
+
+<div class="card">
+  <h2>Nový Bundle (5 obrazů)</h2>
+  <p class="muted">Průzkum trhu (nebo vlastní téma) → prompty → obrázky z Pollinations (3:4) → tiskové soubory → 8 obrázků listingu (první je přehled všech 5 obrazů) → SEO texty. Trvá řádově minuty a spotřebovává kredity Pollinations a Groq. Hotový bundle najdeš ve Skladu produktů; na Etsy se nic nenahrává automaticky. Bundle se na Etsy dodává přes odkaz ke stažení (viz detail produktu).</p>
+  {% if missing_bundle %}
+  <div class="flash bad">Nejdřív doplň v <a href="/settings">Nastavení</a>: {{ missing_bundle | join(', ') }}.</div>
+  {% endif %}
+  <form method="post" action="/generate/bundle">
+    <label>Vlastní téma (nech prázdné pro automatický průzkum trhu)
+      <input type="text" name="theme" maxlength="100" placeholder="např. Japandi minimalist botanicals">
+    </label>
+    <button class="btn" type="submit" {% if missing_bundle %}disabled{% endif %}>Spustit generování</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Vlastní obrázky (SOLO → Single produkty)</h2>
+  <p class="muted">Nahraj PNG/JPG (max. 80 MB na soubor). Každý obrázek se zpracuje na samostatný produkt: tiskové velikosti, mockupy a metadata. U každého obrázku můžeš uvést téma/klíčová slova – podle nich Groq vytvoří titulek, popis a 13 tagů. Po úspěšném zpracování se zdrojový obrázek automaticky přesune do <code>03_Archive</code>, takže se nezpracuje podruhé.</p>
+  <form method="post" action="/generate/upload" enctype="multipart/form-data">
+    <input type="file" name="files" accept=".png,.jpg,.jpeg,image/png,image/jpeg" multiple required>
+    <button class="btn secondary" type="submit">Nahrát do fronty</button>
+  </form>
+
+  <h3>Fronta ({{ queue | length }})</h3>
+  {% if queue %}
+  <form method="post" action="/generate/solo">
+    <input type="hidden" name="n" value="{{ queue | length }}">
+    <ul class="queue-list">
+      {% for f in queue %}
+      <li>
+        <input type="hidden" name="file_{{ loop.index0 }}" value="{{ f.name }}">
+        {{ f.name }} <span class="muted">({{ f.mb }} MB)</span>
+        <input type="text" name="topic_{{ loop.index0 }}" value="{{ f.topic }}" maxlength="300" placeholder="téma / klíčová slova (nepovinné), např. misty forest, fog, pine trees">
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="actions">
+      <button class="btn" type="submit">Zpracovat frontu</button>
+      <button class="btn secondary" type="submit" formaction="/generate/topics">Uložit témata</button>
+    </div>
+  </form>
+  <form method="post" action="/generate/archive"><button class="btn secondary" type="submit">Archivovat frontu bez zpracování</button></form>
+  {% else %}
+  <p class="muted">Fronta je prázdná.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Generování ze seznamu (<code>data/prompts.json</code>)</h2>
+  {% if list_info %}
+    <p class="muted">Nalezeno: {{ list_info }}.</p>
+    {% if missing_bundle %}
+    <div class="flash bad">Doplň v <a href="/settings">Nastavení</a>: {{ missing_bundle | join(', ') }}.</div>
+    {% endif %}
+    <form method="post" action="/generate/list"><button class="btn" type="submit" {% if missing_bundle %}disabled{% endif %}>Spustit ze seznamu</button></form>
+  {% else %}
+    <p class="muted">Soubor <code>data/prompts.json</code> chybí nebo nemá klíč <code>bundles</code>, <code>tasks</code> ani <code>prompts</code>.</p>
+  {% endif %}
+</div>
+{% endblock %}

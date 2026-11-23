@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ j.name }} – EtsyBrowser{% endblock %}
+{% block head %}{% if j.active %}<meta http-equiv="refresh" content="2">{% endif %}{% endblock %}
+{% block content %}
+<p><a href="/jobs">← Všechny úlohy</a></p>
+<h1>{{ j.name }}</h1>
+
+<div class="card">
+  <p>
+    <span class="badge {{ 'ok' if j.status == 'done' else 'bad' if j.status == 'failed' else 'warn' if j.status == 'cancelled' else 'run' }}">{{ j.status_label }}</span>
+    {% if j.cancel_requested and j.active %}<span class="muted">– zrušení požadováno</span>{% endif %}
+  </p>
+  <div class="bar {{ j.status }}"><div class="fill" style="width: {{ j.progress }}%"></div></div>
+  <p class="muted">{{ j.progress }} %{% if j.message %} · {{ j.message }}{% endif %}</p>
+
+  {% if j.error %}<div class="flash bad">{{ j.error }}</div>{% endif %}
+  {% if j.result and j.status == 'done' %}<p class="muted">Výsledek: <code>{{ j.result }}</code></p>{% endif %}
+
+  <dl class="meta">
+    <dt>Vytvořeno</dt><dd>{{ j.created_str }}</dd>
+    {% if j.started_str %}<dt>Spuštěno</dt><dd>{{ j.started_str }}</dd>{% endif %}
+    {% if j.finished_str %}<dt>Dokončeno</dt><dd>{{ j.finished_str }}</dd>{% endif %}
+    <dt>Trvání</dt><dd>{{ (j.duration // 60) }} min {{ (j.duration % 60) }} s</dd>
+  </dl>
+
+  <div class="actions">
+    {% if j.active %}
+    <form method="post" action="/jobs/{{ j.id }}/cancel"><button class="btn danger" type="submit">Zrušit úlohu</button></form>
+    {% endif %}
+    <a class="btn secondary" href="/jobs/{{ j.id }}/log">Stáhnout log</a>
+  </div>
+</div>
+
+<h2>Log</h2>
+{% if j.log_truncated %}<p class="muted">Zobrazen jen konec logu, celý je ve stažitelném souboru.</p>{% endif %}
+<pre class="log">{{ j.log | join('\n') if j.log else 'Zatím bez výstupu.' }}</pre>
+{% endblock %}

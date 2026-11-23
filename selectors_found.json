@@ -1,0 +1,226 @@
+{
+  "photo_upload_input": {
+    "primary": ".le-video-multiple-upload-area input[type='file']",
+    "fallback": [
+      "div[data-clg-id='WtUploadArea'] input[type='file']",
+      "input[type='file'][multiple]"
+    ],
+    "note": "Skrytý input (wt-display-none), vždy přítomen v sekci fotografií nahoře formuláře"
+  },
+  "photo_upload_button": {
+    "primary": ".le-video-multiple-upload-area button",
+    "fallback": [
+      "div.le-video-multiple-upload-area button.wt-btn",
+      "//div[contains(@class, 'le-video-multiple-upload-area')]//button[contains(., 'Upload')]"
+    ],
+    "note": "Viditelné tlačítko pro otevření dialogu výběru fotek"
+  },
+  "photo_thumbnail": {
+    "primary": ".wt-upload__area .wt-grid__item, [data-clg-id='WtUploadArea'] [role='listitem']",
+    "fallback": [
+      ".le-photo-card",
+      "div[data-clg-id='WtUploadArea'] img"
+    ],
+    "note": "Objeví se dynamicky po dokončení nahrání alespoň jedné fotografie"
+  },
+  "type_digital": {
+    "primary": "label[for='inline-category-6844'], label:has-text('Clip Art & Image Files')",
+    "fallback": [
+      "input[id^='inline-category-'][type='checkbox']",
+      "#listing-editor_category-search-typeahead"
+    ],
+    "note": "Etsy v novém editoru nemá samostatné radio Physical/Digital; typ inzerátu se řídí kategorií. Výběr digitální kategorie (např. Clip Art nebo Digital Prints) aktivuje sekci Digital files a AI disclosure"
+  },
+  "digital_files_input": {
+    "primary": "#field-digitalFiles input[type='file']",
+    "fallback": [
+      "#field-digitalFiles .wt-upload__area input[type='file']",
+      "div[id='field-digitalFiles'] input"
+    ],
+    "note": "Skrytý (wt-display-none), objeví se až po zvolení digitální kategorie; jiný než input pro fotky"
+  },
+  "digital_files_button": {
+    "primary": "#field-digitalFiles button:has-text('Add file')",
+    "fallback": [
+      "#field-digitalFiles .wt-upload__area button",
+      "//div[@id='field-digitalFiles']//button[contains(., 'Add file')]"
+    ],
+    "note": "Viditelné tlačítko 'Add file' uvnitř sekce #field-digitalFiles"
+  },
+  "digital_file_done": {
+    "primary": "#field-digitalFiles [role='list'] [role='listitem'], #field-digitalFiles .wt-upload__area [role='list'] > div",
+    "fallback": [
+      "#field-digitalFiles div[draggable='true']",
+      "#field-digitalFiles .wt-text-truncate"
+    ],
+    "note": "Element položky souboru v seznamu; limit je 5 souborů × 20 MB"
+  },
+  "category_search": {
+    "primary": "#listing-editor_category-search-typeahead",
+    "fallback": [
+      "input.le-category-search__input",
+      "input[name='category-search']"
+    ],
+    "note": "Vždy viditelné textové pole pro vyhledání kategorie"
+  },
+  "category_suggestion": {
+    "primary": ".le-category-search__results li, .le-category-search__suggestion",
+    "fallback": [
+      "[role='listbox'] [role='option']",
+      ".wt-typeahead__results li"
+    ],
+    "note": "Objeví se v našeptávači po vepsání textu do #listing-editor_category-search-typeahead"
+  },
+  "who_made_i_did": {
+    "primary": "#field-whoMade input[name='whoMade']:first-of-type",
+    "fallback": [
+      "//fieldset[@id='field-whoMade']//label[contains(., 'I did')]",
+      "label[for*='wt-radio']:has-text('I did')"
+    ],
+    "note": "Radio tlačítko pro 'I did'. ID obsahuje generované UUID, proto je nutné použít selektor přes #field-whoMade nebo text labelu"
+  },
+  "is_supply_finished": {
+    "primary": "#field-isSupply input[name='isSupply']:first-of-type",
+    "fallback": [
+      "//fieldset[@id='field-isSupply']//label[contains(., 'A finished product')]",
+      "label[for*='wt-radio']:has-text('A finished product')"
+    ],
+    "note": "Radio tlačítko pro 'A finished product'. ID obsahuje UUID"
+  },
+  "when_made_select": {
+    "primary": "#when-made-select",
+    "fallback": [
+      "select.wt-select__element.fs-unmask",
+      "#field-whenMade select"
+    ],
+    "note": "Dropdown s hodnotami jako 'made_to_order', '2020_2026'; u čistě digitálních kategorií může být skryt či pre-filled"
+  },
+  "ai_disclosure_radio_ai": {
+    "primary": "input[name='whatContent'][value='ai_gen']",
+    "fallback": [
+      "label:has-text('With an AI generator')",
+      "//input[@name='whatContent'][@value='ai_gen']"
+    ],
+    "note": "Objeví se v sekci 'How is this digital content created?' po výběru digitální kategorie"
+  },
+  "ai_disclosure_radio_me": {
+    "primary": "input[name='whatContent'][value='original']",
+    "fallback": [
+      "label:has-text('Created by me')",
+      "//input[@name='whatContent'][@value='original']"
+    ],
+    "note": "Volba 'Created by me' v sekci 'How is this digital content created?'"
+  },
+  "publish_button": {
+    "primary": "button[data-testid='publish']",
+    "fallback": [
+      ".le-footer__actions button.wt-btn--primary",
+      "//div[contains(@class, 'le-footer__actions')]//button[normalize-space()='Publish']"
+    ],
+    "note": "Tlačítko Publish v dolní liště stránky (nezaměňovat s tlačítkem v potvrzovacím modálu)"
+  },
+  "publish_confirm": {
+    "primary": "#confirmPublishOverlay__container button#shop-manager--listing-publish",
+    "fallback": [
+      "#confirmPublishOverlay__container button.wt-btn--filled",
+      "//div[@id='confirmPublishOverlay__container']//button[normalize-space()='Publish']"
+    ],
+    "note": "Tlačítko potvrzení publikace uvnitř modálního okna po kliknutí na Publish (NEKLIKAT při testování)"
+  },
+  "save_draft_button": {
+    "primary": "#shop-manager--listing-save",
+    "fallback": [
+      "button:has-text('Save as draft')",
+      "//button[@id='shop-manager--listing-save']"
+    ],
+    "note": "Vždy viditelné v horní i dolní navigaci editoru"
+  },
+  "draft_saved_indicator": {
+    "primary": ".wt-toast-feed, [data-clg-id='WtToast']",
+    "fallback": [
+      ".wt-toast--success",
+      "//div[contains(@class, 'wt-toast') and contains(., 'saved')]"
+    ],
+    "note": "Toast notifikace informující o úspěšném uložení konceptu"
+  },
+  "publish_success_indicator": {
+    "primary": "div[role='status'], .wt-toast--success",
+    "fallback": [
+      "//div[contains(@class, 'wt-toast') and (contains(., 'published') or contains(., 'active'))]",
+      "h1:has-text('Listings')"
+    ],
+    "note": "Změna URL z /create na seznam inzerátů nebo toast potvrzující publikaci"
+  },
+  "field_error": {
+    "primary": ".wt-validation__message, [role='alert']",
+    "fallback": [
+      ".wt-alert--status-01",
+      ".wt-validation.has-error"
+    ],
+    "note": "Chybová validační zpráva pod konkrétním nevyplněným nebo chybným polem"
+  },
+  "cookies_accept": {
+    "primary": "button[data-gdpr-single-choice-accept]",
+    "fallback": [
+      "#onetrust-accept-btn-handler",
+      "//button[contains(., 'Accept') or contains(., 'Přijmout')]"
+    ],
+    "note": "Zobrazuje se v překryvu při první návštěvě nebo nepřihlášené session"
+  },
+  "login_email": {
+    "primary": "#join_neu_email_field",
+    "fallback": [
+      "input[type='email']",
+      "input[name='email']"
+    ],
+    "note": "E-mailové pole na přihlašovací stránce /signin"
+  },
+  "login_password": {
+    "primary": "#join_neu_password_field",
+    "fallback": [
+      "input[type='password']",
+      "input[name='password']"
+    ],
+    "note": "Heslové pole na přihlašovací stránce (může se zobrazit až po odeslání e-mailu)"
+  },
+  "login_submit": {
+    "primary": "button[name='submit_attempt']",
+    "fallback": [
+      "button[type='submit']",
+      "form#join-neu-form button[type='submit']"
+    ],
+    "note": "Odesílací tlačítko přihlašovacího formuláře ('Continue' / 'Sign in')"
+  },
+  "login_2fa_input": {
+    "primary": "input[name='two_step_code'], input[name='otp']",
+    "fallback": [
+      "input[type='tel']",
+      "input[autocomplete='one-time-code']"
+    ],
+    "note": "Pole pro jednorázový 2FA kód (vyžaduje ruční zásah uživatele)"
+  },
+  "overlay_close_got_it": {
+    "primary": "button:has-text('Got it')",
+    "fallback": [
+      "//button[normalize-space()='Got it']",
+      ".wt-overlay button.wt-btn--filled"
+    ],
+    "note": "Informační modály (např. country-picker nebo tipy)"
+  },
+  "overlay_close_skip": {
+    "primary": "button:has-text('Skip and continue')",
+    "fallback": [
+      "//button[normalize-space()='Skip and continue']",
+      "#listing_warnings_overlay_container button.wt-btn--transparent"
+    ],
+    "note": "Upozornění při ukládání/publikaci (málo fotografií apod.)"
+  },
+  "overlay_close_icon": {
+    "primary": "button.wt-overlay__close-icon, button[aria-label='Close']",
+    "fallback": [
+      ".wt-overlay button.wt-btn--icon",
+      "//button[@aria-label='Close']"
+    ],
+    "note": "Křížek pro zavření libovolného modálního okna"
+  }
+}

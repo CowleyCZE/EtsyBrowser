@@ -1,0 +1,6 @@
+.env
+etsy_tokens.json
+etsy_tokens.json.tmp
+env
+__pycache__/
+*.py[cod]

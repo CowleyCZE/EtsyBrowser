@@ -13,9 +13,6 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
 
 # production
 /build
@@ -30,15 +27,19 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (tajné hodnoty se necommitují, vzory .env.example ano)
 .env*
+!.env.example
+env
 
-# vercel
-.vercel
+# Etsy OAuth tokeny
+oauth/etsy_tokens.json
+oauth/etsy_tokens.json.tmp
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Dočasná složka pro soubory určené ke smazání
+_to_delete/
+
+
 
 # Python
 __pycache__/
@@ -82,3 +83,14 @@ logs/
 
 # Etsy Uploader specific
 etsy_listings.csv
+
+# Zámek SKU registru
+data/.sku_registry.lock
+
+# Dočasný obrázek pro náhledy mockupů v GUI
+data/mockup_preview/
+
+# Lokální pipeline fronty a vygenerovaný sklad (velké soubory)
+automation/00_Input_Queue/
+automation/02_Warehouse/
+automation/03_Archive/
